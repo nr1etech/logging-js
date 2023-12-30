@@ -38,25 +38,22 @@ let root: Logger | undefined = undefined;
 
 export type Level = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
 
-export function getRootLogger(svc: string): Logger {
-  if (!root) {
-    const name = 'root';
-    root = pino({
-      level: 'trace',
-      mixin: () => {
-        return {svc, name, ip, pid};
+export function initialize(svc: string, name?: string): Logger {
+  root = pino({
+    level: 'trace',
+    mixin: () => {
+      return {svc, name: name ?? 'root', ip, pid};
+    },
+    formatters: {
+      bindings: (bindings: Bindings) => {
+        return {host: bindings.hostname};
       },
-      formatters: {
-        bindings: (bindings: Bindings) => {
-          return {host: bindings.hostname};
-        },
-      },
-    });
-  }
+    },
+  });
   return root;
 }
 
 export function getLogger(name: string, level?: Level): Logger {
-  const logger = getRootLogger('MyService');
-  return logger.child({name, level: level ?? logger.level});
+  if (!root) throw new Error('Logger has not been initialized');
+  return root.child({name, level: level ?? root.level});
 }
