@@ -53,6 +53,11 @@ export function initialize(svc: string, name?: string): Logger {
   return root;
 }
 
+export function getRootLogger(): Logger {
+  if (!root) throw new Error('Logger has not been initialized');
+  return root;
+}
+
 export function getLogger(name: string, level?: Level): Logger {
   if (!root) throw new Error('Logger has not been initialized');
   return root.child({name, level: level ?? root.level});
