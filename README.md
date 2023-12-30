@@ -2,7 +2,7 @@
 
 [![NPM Version][npm-image]][npm-url]
 [![TypeScript Style Guide][gts-image]][gts-url]
-[![GitHub Actions][github-image]][github-url] 
+[![GitHub Actions][github-image]][github-url]
 
 This project provides a simple logging interface for typescript projects that
 adheres to the NR1E logging standard.
