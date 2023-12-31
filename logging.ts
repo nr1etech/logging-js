@@ -49,7 +49,12 @@ if (typeof require === 'function') {
   getDefaultLogLevel = () => undefined; // Fallback function for browser
 }
 
-const ip = getIpAddress();
+let isAwsLambda = false;
+if (typeof require === 'function') {
+  isAwsLambda = !!process.env.LAMBDA_TASK_ROOT;
+}
+
+const ip = isAwsLambda ? undefined : getIpAddress();
 const pid = getProcessId();
 const defaultLevel = getDefaultLogLevel();
 let root: Logger | undefined = undefined;
@@ -87,7 +92,11 @@ export function initialize(options?: LoggingOptions): Logger {
     },
     formatters: {
       bindings: (bindings: Bindings) => {
-        return {host: bindings.hostname};
+        if (!isAwsLambda) {
+          return {host: bindings.hostname};
+        } else {
+          return {};
+        }
       },
     },
   });
