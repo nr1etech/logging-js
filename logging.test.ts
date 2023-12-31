@@ -1,7 +1,9 @@
 import * as logging from './logging';
 
 test('Test Logging', () => {
-  logging.initialize('logging-js');
+  logging.initialize({
+    svc: 'logging-js',
+  });
   const child = logging.getLogger('child');
   child.trace({foo: 'bar', something: 'something'}, 'test trace');
   child.debug({foo: 'bar'}, 'test debug');

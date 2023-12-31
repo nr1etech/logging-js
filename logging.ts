@@ -1,5 +1,11 @@
 import {default as pino, Bindings, Logger} from 'pino';
 
+export type Level = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
+
+export function isLevel(level: string): level is Level {
+  return ['trace', 'debug', 'info', 'warn', 'error', 'fatal'].includes(level);
+}
+
 let getIpAddress: () => string | undefined;
 if (typeof require === 'function') {
   const {networkInterfaces} = require('os');
@@ -32,17 +38,52 @@ if (typeof require === 'function') {
   getProcessId = () => undefined; // Fallback function for browser
 }
 
+let getDefaultLogLevel: () => string | undefined;
+if (typeof require === 'function') {
+  getDefaultLogLevel = (): string | undefined => {
+    const level = process.env.LOGGING_LEVEL;
+    if (level && isLevel(level)) return level;
+    return undefined;
+  };
+} else {
+  getDefaultLogLevel = () => undefined; // Fallback function for browser
+}
+
 const ip = getIpAddress();
 const pid = getProcessId();
+const defaultLevel = getDefaultLogLevel();
 let root: Logger | undefined = undefined;
 
-export type Level = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
+/**
+ * Options for logging initialization.
+ */
+export interface LoggingOptions {
+  /**
+   * The name of the service.
+   */
+  svc: string;
 
-export function initialize(svc: string, name?: string): Logger {
+  /**
+   * The name of the root logger. Default is 'root' if not specified.
+   */
+  name?: string;
+
+  /**
+   * The default log level. If not provided, the environment variable LOGGING_LEVEL is used and if not found 'warn' is used.
+   */
+  level?: Level;
+}
+
+export function initialize(options?: LoggingOptions): Logger {
   root = pino({
-    level: 'trace',
+    level: options?.level ?? defaultLevel ?? 'warn',
     mixin: () => {
-      return {svc, name: name ?? 'root', ip, pid};
+      return {
+        svc: options?.svc,
+        name: options?.name ?? 'root',
+        ip,
+        pid,
+      };
     },
     formatters: {
       bindings: (bindings: Bindings) => {
