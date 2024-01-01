@@ -17,7 +17,8 @@
     "/**/*.d.ts",
     "/**/*.js",
     "/**/*.js.map",
-    "!/**/*.test.*"
+    "!/**/*.test.*",
+    "!/.prettierrc.js"
   ],
   "scripts": {
     "build": "tsc",
