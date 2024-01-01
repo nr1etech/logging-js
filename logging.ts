@@ -2,6 +2,11 @@ import {default as pino, Bindings, Logger} from 'pino';
 
 export type Level = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
 
+/**
+ * Returns true if the given string is a valid log level.
+ *
+ * @param level The log level to check.
+ */
 export function isLevel(level: string): level is Level {
   return ['trace', 'debug', 'info', 'warn', 'error', 'fatal'].includes(level);
 }
@@ -79,6 +84,11 @@ export interface LoggingOptions {
   level?: Level;
 }
 
+/**
+ * Initializes the root logger.
+ *
+ * @param options The options for logging initialization.
+ */
 export function initialize(options?: LoggingOptions): Logger {
   root = pino({
     level: options?.level ?? defaultLevel ?? 'warn',
@@ -111,11 +121,20 @@ export function initialize(options?: LoggingOptions): Logger {
   return root;
 }
 
+/**
+ * Returns the root logger.
+ */
 export function getRootLogger(): Logger {
   if (!root) throw new Error('Logger has not been initialized');
   return root;
 }
 
+/**
+ * Returns a child logger with the given name and level.
+ *
+ * @param name The name of the child logger
+ * @param level The level of the child logger. If not provided, the level of the root logger is used.
+ */
 export function getLogger(name: string, level?: Level): Logger {
   if (!root) throw new Error('Logger has not been initialized');
   return root.child({name, level: level ?? root.level});

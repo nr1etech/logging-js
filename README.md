@@ -1,4 +1,4 @@
-# Logging JS
+# Logging
 
 [![NPM Version][npm-image]][npm-url]
 [![TypeScript Style Guide][gts-image]][gts-url]
