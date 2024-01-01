@@ -12,5 +12,11 @@ test('Test Logging', () => {
   child.info({foo: 'bar'}, 'test info');
   child.warn({foo: 'bar'}, 'test warn');
   child.error({foo: 'bar'}, 'test error');
+  try {
+    throw new Error('I am an error');
+  } catch (err) {
+    child.error({err}, 'test error');
+    child.error(err, 'test error');
+  }
   child.fatal({foo: 'bar'}, 'test fatal');
 });

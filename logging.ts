@@ -83,6 +83,11 @@ export function initialize(options?: LoggingOptions): Logger {
   root = pino({
     level: options?.level ?? defaultLevel ?? 'warn',
     browser: {asObject: true},
+    serializers: {
+      err: err => {
+        return {type: err.type, msg: err.message, stack: err.stack};
+      },
+    },
     mixin: () => {
       return {
         svc: options?.svc,
@@ -94,7 +99,9 @@ export function initialize(options?: LoggingOptions): Logger {
     formatters: {
       bindings: (bindings: Bindings) => {
         if (!isAwsLambda) {
-          return {host: bindings.hostname};
+          return {
+            host: bindings['hostname'],
+          };
         } else {
           return {};
         }
