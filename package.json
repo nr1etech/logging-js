@@ -18,7 +18,8 @@
     "/**/*.js",
     "/**/*.js.map",
     "!/**/*.test.*",
-    "!/.prettierrc.js"
+    "!/.prettierrc.js",
+    "!/jest.config.js"
   ],
   "scripts": {
     "build": "tsc",
