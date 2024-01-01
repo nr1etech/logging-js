@@ -52,7 +52,10 @@ log.info({foo: 'bar'}, 'Just another day in the life of a logger');
 You can also log nested objects
 
 ```typescript
-log.info({foo: 'bar', nested: {foo: 'bar'}}, 'Just another day in the life of a logger');
+log.info(
+    {foo: 'bar', nested: {foo: 'bar'}},
+    'Just another day in the life of a logger'
+);
 ```
 
 To log a message using string interpolation
