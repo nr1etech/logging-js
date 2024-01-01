@@ -27,7 +27,7 @@
     "watch": "tsc -w",
     "test": "jest",
     "lint": "gts lint",
-    "clean": "find . -type f \\( -name '*.js' -o -name '*.d.ts' -o -name '*.map' \\) ! -name 'jest.config.js' ! -name '.prettierrc.js' -delete",
+    "clean": "find . -depth 1 \\( -name '*.js' -o -name '*.d.ts' -o -name '*.map' \\) ! -name '.*' ! -name 'jest.config.js' -delete",
     "fix": "gts fix",
     "makepretty": "prettier --write ."
   },
