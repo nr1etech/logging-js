@@ -82,6 +82,7 @@ export interface LoggingOptions {
 export function initialize(options?: LoggingOptions): Logger {
   root = pino({
     level: options?.level ?? defaultLevel ?? 'warn',
+    browser: {asObject: true},
     mixin: () => {
       return {
         svc: options?.svc,
