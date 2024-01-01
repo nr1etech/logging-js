@@ -7,7 +7,7 @@ export function isLevel(level: string): level is Level {
 }
 
 let getIpAddress: () => string | undefined;
-if (typeof require === 'function') {
+if (typeof process === 'object') {
   const {networkInterfaces} = require('os');
   getIpAddress = (): string | undefined => {
     const ifaces = networkInterfaces();
@@ -30,7 +30,7 @@ if (typeof require === 'function') {
 }
 
 let getProcessId: () => number | undefined;
-if (typeof require === 'function') {
+if (typeof process === 'object') {
   getProcessId = (): number | undefined => {
     return process.pid;
   };
@@ -39,7 +39,7 @@ if (typeof require === 'function') {
 }
 
 let getDefaultLogLevel: () => string | undefined;
-if (typeof require === 'function') {
+if (typeof process === 'object') {
   getDefaultLogLevel = (): string | undefined => {
     const level = process.env.LOGGING_LEVEL;
     if (level && isLevel(level)) return level;
@@ -50,7 +50,7 @@ if (typeof require === 'function') {
 }
 
 let isAwsLambda = false;
-if (typeof require === 'function') {
+if (typeof process === 'object') {
   isAwsLambda = !!process.env.LAMBDA_TASK_ROOT;
 }
 
