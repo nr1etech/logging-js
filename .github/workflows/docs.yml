@@ -3,6 +3,10 @@ on:
     branches:
 #      - main
       - develop
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 name: docs
 jobs:
   deploy:
