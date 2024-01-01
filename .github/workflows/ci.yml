@@ -10,8 +10,6 @@
       with:
         github-email: "365211+erikrj@users.noreply.github.com"
         github-name: "Erik Jensen"
-        publish-github-pages: true
-#        publish-github-pages: ${{ github.ref == 'refs/heads/develop' }}
       secrets:
         deploy-key: ${{ secrets.DEPLOY_KEY }}
         npm-auth-token: ${{ secrets.NPM_AUTH_TOKEN }}
