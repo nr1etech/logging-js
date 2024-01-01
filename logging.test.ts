@@ -18,5 +18,6 @@ test('Test Logging', () => {
     child.error({err}, 'test error');
     child.error(err, 'test error');
   }
+  child.info('This completes our %s', 'test');
   child.fatal({foo: 'bar'}, 'test fatal');
 });

@@ -4,7 +4,7 @@
 [![TypeScript Style Guide][gts-image]][gts-url]
 [![GitHub Actions][github-image]][github-url]
 
-This project provides a simple logging interface for typescript projects that
+Provides a simple logging interface for typescript projects that
 adheres to the NR1E logging standard.
 
 To install using `pnpm`
@@ -12,6 +12,66 @@ To install using `pnpm`
 ```bash
 pnpm i @nr1e/logging-js
 ```
+
+## How to use
+
+Initialize logging in your application.
+
+```typescript
+import * as logging from '@nr1e/logging-js';
+
+// Only needs to be performed once
+logging.initialize({
+    level: 'info',
+    svc: 'my-service',
+});
+```
+
+This only needs to be done once. Additional calls to initialize will have no effect.
+
+In your modules, get a named logger
+
+```typescript
+import * as logging from '@nr1e/logging-js';
+
+const log = logging.getLogger('my-module');
+```
+
+To log a message
+
+```typescript
+log.info('Just another day in the life of a logger');
+```
+
+To log a message with a context
+
+```typescript
+log.info({foo: 'bar'}, 'Just another day in the life of a logger');
+```
+
+To log a message using string interpolation
+
+```typescript
+log.info('Just another day in the life of a logger with %s', 'interpolation');
+```
+
+To log an error
+
+```typescript
+catch (err) {
+    log.error(err, 'An error occurred');
+}
+```
+
+To log an error with additional context
+
+```typescript
+catch (err) {
+    log.error(err, {foo: 'bar'}, 'An error occurred');
+}
+```
+
+Be aware, your error must be named 'err' in the context for the error to be logged.
 
 ## Angular Projects
 
