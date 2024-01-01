@@ -30,7 +30,7 @@
     "clean": "find . -depth 1 \\( -name '*.js' -o -name '*.d.ts' -o -name '*.map' \\) ! -name '.*' ! -name 'jest.config.js' -delete",
     "fix": "gts fix",
     "makepretty": "prettier --write .",
-    "doc": "typedoc index.ts"
+    "site": "typedoc --out site index.ts"
   },
   "devDependencies": {
     "@types/jest": "^29.5.10",

@@ -9,6 +9,7 @@ node_modules
 dist
 ncryptyr.json
 !.prettierrc.js
+site
 
 
 # https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
