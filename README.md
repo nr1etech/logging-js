@@ -14,6 +14,7 @@ pnpm i @nr1e/logging-js
 ```
 
 ## Angular Projects
+
 If you are trying to use this library with Angular, you will need to add the
 `os-browserify` package to your project.
 
