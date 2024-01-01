@@ -1,0 +1,52 @@
+on:
+  push:
+    branches:
+#      - main
+      - develop
+name: docs
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{steps.deployment.outputs.page_url}}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: "8"
+#          version: ${{ inputs.pnpm-version }}
+          run_install: false
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+#          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+      - name: Get pnpm store directory
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+      - uses: actions/cache@v3
+        name: Setup pnpm cache
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-20-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+#          key: ${{ runner.os }}-${{ matrix.node-version }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-20-pnpm-store-
+#            ${{ runner.os }}-${{ matrix.node-version }}-pnpm-store-
+      - name: Install dependencies
+        run: pnpm i --frozen-lockfile --prefer-offline
+      - name: Build Docs
+        run: pnpm run doc
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+      - name: Upload Artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          # upload entire directory
+          path: 'docs/'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
