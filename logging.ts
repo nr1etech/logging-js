@@ -1,5 +1,18 @@
 import {default as pino, Bindings, Logger} from 'pino';
 
+/**
+ * Distributed tracing details that can be sent to the log context.
+ */
+export interface Trace {
+  id: string;
+  parent: string;
+  version: string;
+  flags: string;
+}
+
+/**
+ * The log levels supported by this library.
+ */
 export type Level = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
 
 /**
