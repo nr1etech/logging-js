@@ -93,7 +93,7 @@ pnpm i --save-dev os-browserify
 
 Then add the following to your `angular.json` file inside `compilerOptions`
 
-```json
+```
 {
   ...
   compilerOptions: {
