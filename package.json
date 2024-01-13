@@ -1,7 +1,7 @@
 {
   "name": "@nr1e/logging",
   "description": "Provides a standard logging pattern",
-  "version": "0.0.4-alpha.2",
+  "version": "0.0.4-alpha.3",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "author": "NR1E, Inc.",
