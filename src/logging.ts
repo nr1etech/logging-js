@@ -142,6 +142,31 @@ export function getRootLogger(): Logger {
   return root;
 }
 
+function createProxiedLogger(name: string, level?: Level): Logger {
+  return new Proxy(
+    {},
+    {
+      get: function (target, prop) {
+        if (
+          typeof prop === 'string' &&
+          ['trace', 'debug', 'info', 'warn', 'error', 'fatal'].includes(prop)
+        ) {
+          return (...args: never[]) => {
+            if (!root) throw new Error('Logger has not been initialized');
+            const realLogger = root.child({name, level: level ?? root.level});
+            const method = realLogger[prop as keyof typeof realLogger];
+            if (typeof method === 'function') {
+              return method.bind(realLogger)(...args);
+            }
+            throw new Error(`Property ${prop} is not a function`);
+          };
+        }
+        return undefined;
+      },
+    }
+  ) as Logger;
+}
+
 /**
  * Returns a child logger with the given name and level.
  *
@@ -149,6 +174,7 @@ export function getRootLogger(): Logger {
  * @param level The level of the child logger. If not provided, the level of the root logger is used.
  */
 export function getLogger(name: string, level?: Level): Logger {
-  if (!root) throw new Error('Logger has not been initialized');
-  return root.child({name, level: level ?? root.level});
+  return !root
+    ? createProxiedLogger(name, level)
+    : root.child({name, level: level ?? root.level});
 }
