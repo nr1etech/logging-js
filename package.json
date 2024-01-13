@@ -14,12 +14,10 @@
     "url": "https://github.com/nr1etech/logging-js.git"
   },
   "files": [
-    "/**/*.d.ts",
-    "/**/*.js",
-    "/**/*.js.map",
-    "!/**/*.test.*",
-    "!/.prettierrc.js",
-    "!/jest.config.js"
+    "/dist/**/*.d.ts",
+    "/dist/**/*.js",
+    "/dist/**/*.js.map",
+    "!/dist/**/*.test.*"
   ],
   "scripts": {
     "build": "tsc",
@@ -30,7 +28,7 @@
     "clean": "find . -depth 1 \\( -name '*.js' -o -name '*.d.ts' -o -name '*.map' \\) ! -name '.*' ! -name 'jest.config.js' -delete",
     "fix": "gts fix",
     "makepretty": "prettier --write .",
-    "site": "typedoc --out site index.ts"
+    "site": "typedoc --out site src/index.ts"
   },
   "devDependencies": {
     "@types/jest": "^29.5.10",
@@ -40,13 +38,6 @@
     "ts-jest": "^29.1.1",
     "typedoc": "^0.25.6",
     "typescript": "~5.1.6"
-  },
-  "exports": {
-    ".": "./index.js",
-    "./package.json": "./package.json",
-    "./http": "./http/index.js",
-    "./errors": "./errors/index.js",
-    "./validator": "./validator/index.js"
   },
   "dependencies": {
     "pino": "^8.17.2"
