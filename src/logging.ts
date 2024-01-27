@@ -417,23 +417,29 @@ export function getRootLoggerSafe(): Logger | undefined {
 }
 
 /**
- * Returns a child logger created from the root logger. If the logger has not been initialized, an error is thrown.
+ * Returns a child logger.
  *
  * @param name the name of the child logger
+ * @param log the logger to use. If not provided, the root logger is used.
  */
-export function getLogger(name: string): Logger {
+export function getLogger(name: string, log?: Logger): Logger {
   if (!root) throw new Error('Logger has not been initialized');
-  return new Logger(root.pino().child({name}));
+  return log === undefined
+    ? new Logger(root.pino().child({name}))
+    : new Logger(log.pino().child({name}));
 }
 
 /**
- * Returns a child logger created from the root logger. If the logger has not been initialized, undefined is returned.
+ * Returns a child logger.
  *
  * @param name the name of the child logger
+ * @param log the logger to use. If not provided, the root logger is used.
  */
-export function getLoggerSafe(name: string): Logger | undefined {
+export function getLoggerSafe(name: string, log?: Logger): Logger | undefined {
   if (!root) return undefined;
-  return new Logger(root.pino().child({name}));
+  return log === undefined
+    ? new Logger(root.pino().child({name}))
+    : new Logger(log.pino().child({name}));
 }
 
 // // TODO Need the ability to add context to the logger
