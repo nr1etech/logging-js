@@ -1,5 +1,7 @@
 import {default as pino, Bindings, Logger} from 'pino';
 
+export {Logger} from 'pino';
+
 /**
  * Distributed tracing details that can be sent to the log context.
  */
