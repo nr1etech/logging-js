@@ -1,5 +1,43 @@
 import * as logging from './logging.js';
 
+import {Writable} from 'stream';
+
+class TestStream extends Writable {
+  last: string | undefined;
+  _write(
+    chunk: any,
+    encoding?: string,
+    callback?: (error?: Error | undefined) => void
+  ) {
+    this.last = chunk.toString();
+  }
+
+  json(): object | undefined {
+    if (this.last === undefined) return undefined;
+    const obj = JSON.parse(this.last);
+    this.last = undefined;
+    return obj;
+  }
+}
+
+// Doing naughty stuff, look the other way
+const stream = new TestStream();
+const original = process.stdout.write.bind(process.stdout);
+process.stdout.write = (
+  chunk: string | Uint8Array,
+  encodingOrCallback?: BufferEncoding | ((err?: Error | undefined) => void),
+  callback?: (err?: Error | undefined) => void
+) => {
+  let encoding: BufferEncoding | undefined;
+  if (typeof encodingOrCallback === 'string') {
+    encoding = encodingOrCallback;
+  } else if (typeof encodingOrCallback === 'function') {
+    callback = encodingOrCallback;
+  }
+  stream._write(chunk, encoding, callback);
+  return original(chunk, encodingOrCallback as BufferEncoding, callback);
+};
+
 test('Test Logging', async () => {
   await logging.initialize({
     level: 'trace',
@@ -8,20 +46,48 @@ test('Test Logging', async () => {
   const root = logging.getRootLogger();
   expect(root).toBeDefined();
   const child = logging.getLogger('child');
-  child.trace('test trace');
-  child.trace({foo: 'bar', something: 'something'}, 'test trace');
-  child.debug({foo: 'bar'}, 'test debug');
-  child.info({foo: 'bar'}, 'test info');
-  child.warn({foo: 'bar'}, 'test warn');
-  child.error({foo: 'bar'}, 'test error');
+  child.trace().msg('test trace');
+  expect(stream.json()).toEqual(
+    expect.objectContaining({
+      level: 10,
+      time: expect.any(Number),
+      name: 'root',
+      svc: 'logging-js',
+      ip: expect.any(String),
+      pid: expect.any(Number),
+      msg: 'test trace',
+    })
+  );
+  child
+    .trace()
+    .obj('bar', {foo: 'bar', something: 'something'})
+    .msg('test trace');
+  expect(stream.json()).toEqual(
+    expect.objectContaining({
+      level: 10,
+      time: expect.any(Number),
+      name: 'root',
+      svc: 'logging-js',
+      ip: expect.any(String),
+      pid: expect.any(Number),
+      msg: 'test trace',
+      bar: {
+        foo: 'bar',
+        something: 'something',
+      },
+    })
+  );
+  child.debug().obj('moo', {foo: 'bar'}).msg('test debug');
+  child.info().obj('moo', {foo: 'bar'}).msg('test info');
+  child.warn().obj('moo', {foo: 'bar'}).msg('test warn');
+  child.error().obj('moo', {foo: 'bar'}).msg('test error');
   try {
     throw new Error('I am an error');
   } catch (err) {
-    child.error({err}, 'test error');
-    child.error(err, 'test error');
+    child.error().err(err).msg('test error');
   }
-  child.info('This completes our %s', 'test');
-  child.fatal({foo: 'bar'}, 'test fatal');
+  child.info().msg('This completes our %s', 'test');
+  child.fatal().obj('moo', {foo: 'bar'}).msg('test fatal');
 });
 
 test('Test isLevel', () => {

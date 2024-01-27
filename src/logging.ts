@@ -1,21 +1,24 @@
-import {default as pino, Bindings, Logger} from 'pino';
-
-export {Logger} from 'pino';
-
-/**
- * Distributed tracing details that can be sent to the log context.
- */
-export interface Trace {
-  id: string;
-  parent: string;
-  version: string;
-  flags: string;
-}
+import {
+  default as pino,
+  Bindings,
+  Logger as PLogger,
+  TransportSingleOptions,
+  TransportPipelineOptions,
+  TransportMultiOptions,
+} from 'pino';
+import {getIpAddress, getProcessId, isAwsLambda} from './helpers.js';
 
 /**
  * The log levels supported by this library.
  */
-export type Level = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
+export type Level =
+  | 'silent'
+  | 'trace'
+  | 'debug'
+  | 'info'
+  | 'warn'
+  | 'error'
+  | 'fatal';
 
 /**
  * Returns true if the given string is a valid log level.
@@ -23,85 +26,37 @@ export type Level = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
  * @param level The log level to check.
  */
 export function isLevel(level: string): level is Level {
-  return ['trace', 'debug', 'info', 'warn', 'error', 'fatal'].includes(level);
+  return [
+    'silent',
+    'trace',
+    'debug',
+    'info',
+    'warn',
+    'error',
+    'fatal',
+  ].includes(level);
 }
-
-let isAwsLambda = false;
-if (typeof process === 'object') {
-  isAwsLambda = !!process.env.LAMBDA_TASK_ROOT;
-}
-
-let ip: string | undefined = undefined;
-export async function loadIpAddress(): Promise<void> {
-  if (ip === undefined && !isAwsLambda) {
-    if (typeof process === 'object') {
-      let ipv6: string | undefined = undefined;
-      let ipv4: string | undefined = undefined;
-      const {networkInterfaces} = await import('os');
-      const ifaces = networkInterfaces();
-      if (ifaces === undefined) return undefined;
-      for (const name of Object.keys(ifaces)) {
-        for (const iface of ifaces[name]!) {
-          if (!iface.internal && iface.mac !== '00:00:00:00:00:00') {
-            if (iface.family === 'IPv4') {
-              ipv4 = iface.address;
-            } else {
-              ipv6 = iface.address;
-            }
-          }
-        }
-      }
-      if (ipv4 !== undefined) {
-        ip = ipv4;
-      } else if (ipv6 !== undefined) {
-        ip = ipv6;
-      }
-    }
-  }
-}
-
-let getProcessId: () => number | undefined;
-if (typeof process === 'object') {
-  getProcessId = (): number | undefined => {
-    return process.pid;
-  };
-} else {
-  getProcessId = () => undefined; // Fallback function for browser
-}
-
-let getDefaultLogLevel: () => string | undefined;
-if (typeof process === 'object') {
-  getDefaultLogLevel = (): string | undefined => {
-    const level = process.env.LOGGING_LEVEL;
-    if (level && isLevel(level)) return level;
-    return undefined;
-  };
-} else {
-  getDefaultLogLevel = () => undefined; // Fallback function for browser
-}
-
-const pid = getProcessId();
-const defaultLevel = getDefaultLogLevel();
-let root: Logger | undefined = undefined;
 
 /**
- * Options for logging initialization.
+ * Distributed tracing details that can be sent to the log context.
  */
-export interface LoggingOptions {
+export interface DistributedTraceContext {
   /**
-   * The name of the service.
+   * The trace-id header.
    */
-  svc: string;
-
+  id: string;
   /**
-   * The name of the root logger. Default is 'root' if not specified.
+   * The parent-id header.
    */
-  name?: string;
-
+  parent: string;
   /**
-   * The default log level. If not provided, the environment variable LOGGING_LEVEL is used and if not found 'warn' is used.
+   * The version header.
    */
-  level?: Level;
+  version: string;
+  /**
+   * The trace-flags header
+   */
+  flags: string;
 }
 
 interface TypedError {
@@ -121,90 +76,405 @@ function isTypedError(err: unknown): err is TypedError {
 }
 
 /**
- * Initializes the root logger.
- *
- * @param options The options for logging initialization.
+ * Represents a log entry.
  */
-export async function initialize(options?: LoggingOptions): Promise<Logger> {
-  await loadIpAddress();
-  root = pino({
-    level: options?.level ?? defaultLevel ?? 'warn',
-    browser: {asObject: true},
-    serializers: {
-      err: (err: unknown) => {
-        if (isTypedError(err)) {
-          return {type: err.type, msg: err.message, stack: err.stack};
-        }
-        if (err instanceof Error) {
-          return {type: err.name, msg: err.message, stack: err.stack};
-        }
-        return {type: 'unknown', msg: err, stack: ''};
-      },
-    },
-    mixin: () => {
-      return {
-        svc: options?.svc,
-        name: options?.name ?? 'root',
-        ip,
-        pid,
-      };
-    },
-    formatters: {
-      bindings: (bindings: Bindings) => {
-        if (!isAwsLambda) {
-          return {
-            host: bindings['hostname'],
-          };
-        } else {
-          return {};
-        }
-      },
-    },
-  });
-  return root!;
+export interface Entry {
+  str: (key: string, value: string) => Entry;
+  num: (key: string, value: number) => Entry;
+  bool: (key: string, value: boolean) => Entry;
+  obj: (key: string, value: Record<string, unknown>) => Entry;
+  unknown: (key: string, value: unknown) => Entry;
+  err: (err: unknown) => Entry;
+  thread: (thread: string) => Entry;
+  pid: (pid: number) => Entry;
+  host: (host: string) => Entry;
+  ip: (ip: string) => Entry;
+  cip: (ip: string) => Entry;
+  trace: (dt: DistributedTraceContext) => Entry;
+  msg: (msg: string, ...args: string[]) => void;
+  send: () => void;
 }
 
 /**
- * Returns the root logger.
+ * The context that can be sent to the log context.
+ */
+export type Context = Record<string, unknown>;
+
+/**
+ * Wrapper around a pino logger that enforces a logging pattern similar to Zerolog and provides
+ * an API that better supports the NR1E logging standard. Instances of this class should not be
+ * shared between threads/workers. Instead, create a new child logger for each thread. The logger
+ * itself is meant to be passed around as parameters to functions to support the contextual
+ * structured logging pattern.
+ */
+export class Logger {
+  protected entryCtx: Context;
+  protected entry: Entry;
+  protected entryLevel:
+    | ((ctx: Context, msg?: string, ...args: string[]) => void)
+    | undefined;
+
+  protected str(key: string, value: string): Entry {
+    this.entryCtx[key] = value;
+    return this.entry;
+  }
+
+  protected num(key: string, value: number): Entry {
+    this.entryCtx[key] = value;
+    return this.entry;
+  }
+
+  protected bool(key: string, value: boolean): Entry {
+    this.entryCtx[key] = value;
+    return this.entry;
+  }
+
+  protected obj(key: string, value: Record<string, unknown>): Entry {
+    this.entryCtx[key] = value;
+    return this.entry;
+  }
+
+  protected unknown(key: string, value: unknown): Entry {
+    this.entryCtx[key] = value;
+    return this.entry;
+  }
+
+  protected err(err: unknown): Entry {
+    if (err instanceof Error) {
+      this.entryCtx['err'] = {
+        type: err.name,
+        message: err.message,
+        stack: err.stack,
+      };
+    } else if (isTypedError(err)) {
+      this.entryCtx['err'] = {
+        type: err.type,
+        message: err.message,
+        stack: err.stack,
+      };
+    } else {
+      this.entryCtx['err'] = err;
+    }
+    return this.entry;
+  }
+
+  protected thread(thread: string): Entry {
+    this.entryCtx['thread'] = thread;
+    return this.entry;
+  }
+
+  protected pid(pid: number): Entry {
+    this.entryCtx['pid'] = pid;
+    return this.entry;
+  }
+
+  protected host(host: string): Entry {
+    this.entryCtx['host'] = host;
+    return this.entry;
+  }
+
+  protected ip(ip: string): Entry {
+    this.entryCtx['ip'] = ip;
+    return this.entry;
+  }
+
+  protected cip(ip: string): Entry {
+    this.entryCtx['cip'] = ip;
+    return this.entry;
+  }
+
+  protected dtrace(dt: DistributedTraceContext): Entry {
+    this.entryCtx['dt'] = dt;
+    return this.entry;
+  }
+
+  protected msg(msg: string, ...args: string[]): void {
+    const level =
+      this.entryLevel?.bind(this.log) ?? this.log.trace.bind(this.log);
+    level(this.entryCtx, msg, ...args);
+    this.entryCtx = {};
+    this.entryLevel = undefined;
+  }
+
+  protected send(): void {
+    const level = this.entryLevel ?? this.log.trace;
+    level(this.entryCtx);
+    this.entryCtx = {};
+    this.entryLevel = undefined;
+  }
+
+  constructor(protected log: PLogger) {
+    this.entryCtx = {};
+    this.entry = {
+      msg: this.msg.bind(this),
+      send: this.send.bind(this),
+      str: this.str.bind(this),
+      num: this.num.bind(this),
+      bool: this.bool.bind(this),
+      obj: this.obj.bind(this),
+      unknown: this.unknown.bind(this),
+      err: this.err.bind(this),
+      thread: this.thread.bind(this),
+      pid: this.pid.bind(this),
+      host: this.host.bind(this),
+      ip: this.ip.bind(this),
+      cip: this.cip.bind(this),
+      trace: this.dtrace.bind(this),
+    };
+  }
+
+  isTrace(): boolean {
+    return this.log.levelVal <= 10;
+  }
+
+  trace(): Entry {
+    this.entryLevel = this.log.trace;
+    return this.entry;
+  }
+
+  isDebug(): boolean {
+    return this.log.levelVal <= 20;
+  }
+
+  debug(): Entry {
+    this.entryLevel = this.log.debug;
+    return this.entry;
+  }
+
+  isInfo(): boolean {
+    return this.log.levelVal <= 30;
+  }
+
+  info(): Entry {
+    this.entryLevel = this.log.info;
+    return this.entry;
+  }
+
+  isWarn(): boolean {
+    return this.log.levelVal <= 40;
+  }
+
+  warn(): Entry {
+    this.entryLevel = this.log.warn;
+    return this.entry;
+  }
+
+  isError(): boolean {
+    return this.log.levelVal <= 50;
+  }
+
+  error(): Entry {
+    this.entryLevel = this.log.error;
+    return this.entry;
+  }
+
+  isFatal(): boolean {
+    return this.log.levelVal <= 60;
+  }
+
+  fatal(): Entry {
+    this.entryLevel = this.log.fatal;
+    return this.entry;
+  }
+
+  /**
+   * Returns the inner pino logger if you need to do something that is not supported by this class.
+   */
+  pino(): PLogger {
+    return this.log;
+  }
+
+  /**
+   * Add context to the logger. Anything added here will be added to every log entry.
+   * This does not override any context that was previously added to the logger or any parent logger.
+   *
+   * @param ctx the context to add
+   */
+  ctx(ctx: Context): Logger {
+    this.log.setBindings(ctx);
+    return this;
+  }
+
+  /**
+   * Returns the current logger context.
+   */
+  getCtx(): Context {
+    return this.log.bindings() as Context;
+  }
+
+  /**
+   * Overrides the log level for the logger.
+   *
+   * @param level the log level to set
+   */
+  level(level: Level): Logger {
+    this.log.level = level;
+    return this;
+  }
+
+  /**
+   * Returns the current log level.
+   */
+  getLevel(): Level {
+    return this.log.level as Level;
+  }
+}
+
+function getDefaultLogLevel(): string | undefined {
+  if (typeof process === 'object') {
+    const level = process.env.LOGGING_LEVEL;
+    if (level && isLevel(level)) return level;
+  }
+  return undefined;
+}
+
+/**
+ * Options for logging initialization.
+ */
+export interface LoggingConfig {
+  /**
+   * The name of the service.
+   */
+  svc: string;
+
+  /**
+   * The name of the root logger. Default is 'root' if not specified.
+   */
+  name?: string;
+
+  /**
+   * The default log level. If not provided, the environment variable LOGGING_LEVEL is used and if not found 'warn' is used.
+   */
+  level?: Level;
+
+  /**
+   * The context to add to the logger.
+   */
+  ctx?: Context;
+
+  /**
+   * The pino transport options.
+   */
+  transport?:
+    | TransportSingleOptions
+    | TransportMultiOptions
+    | TransportPipelineOptions
+    | undefined;
+}
+
+let root: Logger | undefined;
+
+export async function initialize(
+  options: LoggingConfig,
+  override?: boolean
+): Promise<Logger> {
+  if (root === undefined || override) {
+    const ip = await getIpAddress();
+    const pid = getProcessId();
+    const plog = pino({
+      level: options?.level ?? getDefaultLogLevel() ?? 'info',
+      browser: {asObject: true},
+      serializers: {},
+      mixin: () => {
+        return {
+          svc: options?.svc,
+          name: options?.name ?? 'root',
+          ip,
+          pid,
+        };
+      },
+      transport: options?.transport,
+      formatters: {
+        bindings: (bindings: Bindings) => {
+          if (!isAwsLambda) {
+            return {
+              host: bindings['hostname'],
+            };
+          } else {
+            return {};
+          }
+        },
+      },
+    });
+    root = new Logger(plog);
+  }
+  return root;
+}
+
+/**
+ * Returns the root logger. If the logger has not been initialized, an error is thrown.
  */
 export function getRootLogger(): Logger {
   if (!root) throw new Error('Logger has not been initialized');
   return root;
 }
 
-function createProxiedLogger(name: string, level?: Level): Logger {
-  return new Proxy(
-    {},
-    {
-      get: function (target, prop) {
-        if (
-          typeof prop === 'string' &&
-          ['trace', 'debug', 'info', 'warn', 'error', 'fatal'].includes(prop)
-        ) {
-          return (...args: never[]) => {
-            if (!root) throw new Error('Logger has not been initialized');
-            const realLogger = root.child({name, level: level ?? root.level});
-            const method = realLogger[prop as keyof typeof realLogger];
-            if (typeof method === 'function') {
-              return method.bind(realLogger)(...args);
-            }
-            throw new Error(`Property ${prop} is not a function`);
-          };
-        }
-        return undefined;
-      },
-    }
-  ) as Logger;
+/**
+ * Returns the root logger. If the logger has not been initialized, undefined is returned.
+ */
+export function getRootLoggerSafe(): Logger | undefined {
+  return root;
 }
 
 /**
- * Returns a child logger with the given name and level.
+ * Returns a child logger created from the root logger. If the logger has not been initialized, an error is thrown.
  *
- * @param name The name of the child logger
- * @param level The level of the child logger. If not provided, the level of the root logger is used.
+ * @param name the name of the child logger
  */
-export function getLogger(name: string, level?: Level): Logger {
-  return !root
-    ? createProxiedLogger(name, level)
-    : root.child({name, level: level ?? root.level});
+export function getLogger(name: string): Logger {
+  if (!root) throw new Error('Logger has not been initialized');
+  return new Logger(root.pino().child({name}));
 }
+
+/**
+ * Returns a child logger created from the root logger. If the logger has not been initialized, undefined is returned.
+ *
+ * @param name the name of the child logger
+ */
+export function getLoggerSafe(name: string): Logger | undefined {
+  if (!root) return undefined;
+  return new Logger(root.pino().child({name}));
+}
+
+// // TODO Need the ability to add context to the logger
+// function createProxiedLogger(name: string, level?: Level): Logger {
+//   return new Proxy(
+//     {},
+//     {
+//       get: function (target, prop) {
+//         if (
+//           typeof prop === 'string' &&
+//           ['trace', 'debug', 'info', 'warn', 'error', 'fatal'].includes(prop)
+//         ) {
+//           return (...args: never[]) => {
+//             if (!root) throw new Error('Logger has not been initialized');
+//             const realLogger = root.child({name, level: level ?? root.level});
+//             const method = realLogger[prop as keyof typeof realLogger];
+//             if (typeof method === 'function') {
+//               return method.bind(realLogger)(...args);
+//             }
+//             throw new Error(`Property ${prop} is not a function`);
+//           };
+//         }
+//         return undefined;
+//       },
+//     }
+//   ) as Logger;
+// }
+
+// /**
+//  * Returns a child logger with the given name and level.
+//  *
+//  * @param name The name of the child logger
+//  * @param level The level of the child logger. If not provided, the level of the root logger is used.
+//  */
+// TODO Need the ability to add context to the logger
+// export function getLogger(
+//   name: string,
+//   ctx?: Record<string, unknown>,
+//   level?: Level
+// ): Logger {
+//   return !root
+//     ? createProxiedLogger(name, level)
+//     : root.child({name, level: level ?? root.level});
+// }
