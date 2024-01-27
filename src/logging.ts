@@ -1,5 +1,4 @@
-import {Bindings, Logger} from 'pino';
-const pino = require('pino');
+import {default as pino, Bindings, Logger} from 'pino';
 
 /**
  * Distributed tracing details that can be sent to the log context.
@@ -120,7 +119,7 @@ function isTypedError(err: unknown): err is TypedError {
  * @param options The options for logging initialization.
  */
 export function initialize(options?: LoggingOptions): Logger {
-  root = pino({
+  root = pino.pino({
     level: options?.level ?? defaultLevel ?? 'warn',
     browser: {asObject: true},
     serializers: {
