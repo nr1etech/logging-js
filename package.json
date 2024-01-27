@@ -19,7 +19,7 @@
     "build": "tsc",
     "postbuild": "prettier --check . && gts lint && cp package.json dist",
     "watch": "tsc -w",
-    "test": "jest --coverage --collectCoverageFrom='src/**/*.{ts,tsx}'",
+    "test": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest --coverage --collectCoverageFrom='src/**/*.{ts,tsx}'",
     "lint": "gts lint",
     "clean": "rm -rf dist && rm -rf site",
     "fix": "gts fix",

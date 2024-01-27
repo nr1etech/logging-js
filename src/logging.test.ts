@@ -1,7 +1,7 @@
 import * as logging from './logging.js';
 
-test('Test Logging', () => {
-  logging.initialize({
+test('Test Logging', async () => {
+  await logging.initialize({
     level: 'trace',
     svc: 'logging-js',
   });

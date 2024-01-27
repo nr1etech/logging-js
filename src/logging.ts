@@ -24,27 +24,38 @@ export function isLevel(level: string): level is Level {
   return ['trace', 'debug', 'info', 'warn', 'error', 'fatal'].includes(level);
 }
 
-let getIpAddress: () => string | undefined;
+let isAwsLambda = false;
 if (typeof process === 'object') {
-  const {networkInterfaces} = require('os');
-  getIpAddress = (): string | undefined => {
-    const ifaces = networkInterfaces();
-    let ipv6: string | undefined = undefined;
-    for (const name of Object.keys(ifaces)) {
-      for (const iface of ifaces[name]) {
-        if (!iface.internal && iface.mac !== '00:00:00:00:00:00') {
-          if (iface.family === 'IPv4') {
-            return iface.address;
-          } else {
-            ipv6 = iface.address;
+  isAwsLambda = !!process.env.LAMBDA_TASK_ROOT;
+}
+
+let ip: string | undefined = undefined;
+export async function loadIpAddress(): Promise<void> {
+  if (ip === undefined && !isAwsLambda) {
+    if (typeof process === 'object') {
+      let ipv6: string | undefined = undefined;
+      let ipv4: string | undefined = undefined;
+      const {networkInterfaces} = await import('os');
+      const ifaces = networkInterfaces();
+      if (ifaces === undefined) return undefined;
+      for (const name of Object.keys(ifaces)) {
+        for (const iface of ifaces[name]!) {
+          if (!iface.internal && iface.mac !== '00:00:00:00:00:00') {
+            if (iface.family === 'IPv4') {
+              ipv4 = iface.address;
+            } else {
+              ipv6 = iface.address;
+            }
           }
         }
       }
+      if (ipv4 !== undefined) {
+        ip = ipv4;
+      } else if (ipv6 !== undefined) {
+        ip = ipv6;
+      }
     }
-    return ipv6;
-  };
-} else {
-  getIpAddress = () => undefined; // Fallback function for browser
+  }
 }
 
 let getProcessId: () => number | undefined;
@@ -67,12 +78,6 @@ if (typeof process === 'object') {
   getDefaultLogLevel = () => undefined; // Fallback function for browser
 }
 
-let isAwsLambda = false;
-if (typeof process === 'object') {
-  isAwsLambda = !!process.env.LAMBDA_TASK_ROOT;
-}
-
-const ip = isAwsLambda ? undefined : getIpAddress();
 const pid = getProcessId();
 const defaultLevel = getDefaultLogLevel();
 let root: Logger | undefined = undefined;
@@ -118,8 +123,9 @@ function isTypedError(err: unknown): err is TypedError {
  *
  * @param options The options for logging initialization.
  */
-export function initialize(options?: LoggingOptions): Logger {
-  root = pino.pino({
+export async function initialize(options?: LoggingOptions): Promise<Logger> {
+  await loadIpAddress();
+  root = pino({
     level: options?.level ?? defaultLevel ?? 'warn',
     browser: {asObject: true},
     serializers: {
