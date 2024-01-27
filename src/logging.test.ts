@@ -1,4 +1,4 @@
-import * as logging from './logging';
+import * as logging from './logging.js';
 
 test('Test Logging', () => {
   logging.initialize({

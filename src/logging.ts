@@ -1,4 +1,5 @@
-import {default as pino, Bindings, Logger} from 'pino';
+import {Bindings, Logger} from 'pino';
+const pino = require('pino');
 
 /**
  * Distributed tracing details that can be sent to the log context.
@@ -97,6 +98,22 @@ export interface LoggingOptions {
   level?: Level;
 }
 
+interface TypedError {
+  type: string;
+  message: string;
+  stack: string;
+}
+
+function isTypedError(err: unknown): err is TypedError {
+  return (
+    typeof err === 'object' &&
+    err !== null &&
+    'type' in err &&
+    'message' in err &&
+    'stack' in err
+  );
+}
+
 /**
  * Initializes the root logger.
  *
@@ -107,8 +124,14 @@ export function initialize(options?: LoggingOptions): Logger {
     level: options?.level ?? defaultLevel ?? 'warn',
     browser: {asObject: true},
     serializers: {
-      err: err => {
-        return {type: err.type, msg: err.message, stack: err.stack};
+      err: (err: unknown) => {
+        if (isTypedError(err)) {
+          return {type: err.type, msg: err.message, stack: err.stack};
+        }
+        if (err instanceof Error) {
+          return {type: err.name, msg: err.message, stack: err.stack};
+        }
+        return {type: 'unknown', msg: err, stack: ''};
       },
     },
     mixin: () => {
@@ -131,7 +154,7 @@ export function initialize(options?: LoggingOptions): Logger {
       },
     },
   });
-  return root;
+  return root!;
 }
 
 /**
