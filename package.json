@@ -2,8 +2,7 @@
   "name": "@nr1e/logging",
   "description": "Provides a standard logging pattern",
   "version": "0.0.4",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "type": "module",
   "author": "NR1E, Inc.",
   "publishConfig": {
     "access": "public"
@@ -14,21 +13,18 @@
     "url": "https://github.com/nr1etech/logging-js.git"
   },
   "files": [
-    "/dist/**/*.d.ts",
-    "/dist/**/*.js",
-    "/dist/**/*.js.map",
-    "!/dist/**/*.test.*"
+    "**"
   ],
   "scripts": {
     "build": "tsc",
-    "postbuild": "prettier --check . && gts lint",
+    "postbuild": "prettier --check . && gts lint && cp package.json dist",
     "watch": "tsc -w",
-    "test": "jest",
+    "test": "jest --coverage --collectCoverageFrom='src/**/*.{ts,tsx}'",
     "lint": "gts lint",
-    "clean": "find . -depth 1 \\( -name '*.js' -o -name '*.d.ts' -o -name '*.map' \\) ! -name '.*' ! -name 'jest.config.js' -delete",
+    "clean": "rm -rf dist && rm -rf site",
     "fix": "gts fix",
     "makepretty": "prettier --write .",
-    "site": "typedoc --out site src/index.ts"
+    "site": "typedoc --out site \"src/**/*.ts\" --exclude \"src/**/*.test.ts\""
   },
   "devDependencies": {
     "@types/jest": "^29.5.10",
@@ -36,13 +32,21 @@
     "gts": "^5.2.0",
     "jest": "^29.7.0",
     "ts-jest": "^29.1.1",
+    "ts-node": "^10.9.2",
     "typedoc": "^0.25.6",
     "typescript": "~5.1.6"
   },
   "dependencies": {
-    "pino": "^8.17.2"
+    "pino": "^8.17.2",
+    "tslib": "^2.6.2"
   },
   "peerDependencies": {
     "pino": "^8.17.2"
+  },
+  "exports": {
+    ".": {
+      "import": "./index.js",
+      "types": "./index.d.ts"
+    }
   }
 }

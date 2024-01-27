@@ -4,3 +4,4 @@ dist
 .github
 pnpm-lock.yaml
 site
+coverage
