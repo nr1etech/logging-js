@@ -21,7 +21,7 @@
     "watch": "tsc -w",
     "test": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest --coverage --collectCoverageFrom='src/**/*.{ts,tsx}'",
     "lint": "gts lint",
-    "clean": "rm -rf dist && rm -rf site",
+    "clean": "rm -rf dist && rm -rf site && rm -rf coverage",
     "fix": "gts fix",
     "makepretty": "prettier --write .",
     "site": "typedoc --out site \"src/**/*.ts\" --exclude \"src/**/*.test.ts\""
