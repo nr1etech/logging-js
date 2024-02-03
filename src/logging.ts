@@ -129,7 +129,7 @@ export class Logger {
     return this.entry;
   }
 
-  protected obj(key: string, value: Record<string, unknown>): Entry {
+  protected obj(key: string, value: object | Record<string, unknown>): Entry {
     this.entryCtx[key] = value;
     return this.entry;
   }
