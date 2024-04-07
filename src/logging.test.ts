@@ -38,6 +38,13 @@ process.stdout.write = (
   return original(chunk, encodingOrCallback as BufferEncoding, callback);
 };
 
+class TestClass {
+  constructor(
+    public foo: string,
+    public bar: number
+  ) {}
+}
+
 test('Test Logging', async () => {
   await logging.initialize({
     level: 'trace',
@@ -81,6 +88,7 @@ test('Test Logging', async () => {
   child.info().obj('moo', {foo: 'bar'}).msg('test info');
   child.warn().obj('moo', {foo: 'bar'}).msg('test warn');
   child.error().obj('moo', {foo: 'bar'}).msg('test error');
+  child.debug().obj('moo', new TestClass('foo', 42)).msg('test object');
   try {
     throw new Error('I am an error');
   } catch (err) {

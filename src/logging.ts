@@ -82,7 +82,7 @@ export interface Entry {
   str: (key: string, value: string) => Entry;
   num: (key: string, value: number) => Entry;
   bool: (key: string, value: boolean) => Entry;
-  obj: (key: string, value: Record<string, unknown>) => Entry;
+  obj: (key: string, value: Record<string, unknown> | object) => Entry;
   unknown: (key: string, value: unknown) => Entry;
   err: (err: unknown) => Entry;
   thread: (thread: string) => Entry;
