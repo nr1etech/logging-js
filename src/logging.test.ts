@@ -99,3 +99,21 @@ test('Test isLevel', () => {
   expect(logging.isLevel('fatal')).toBe(true);
   expect(logging.isLevel('foo')).toBe(false);
 });
+
+test('Test lazy initialization', async () => {
+  logging.shutdown();
+  const rootLogger = logging.getRootLogger();
+  const childLogger = logging.getLogger('child');
+  expect(() => rootLogger.debug().msg('test')).toThrow(
+    'Logger has not been initialized'
+  );
+  expect(() => childLogger.debug().msg('test')).toThrow(
+    'Logger has not been initialized'
+  );
+  await logging.initialize({
+    level: 'trace',
+    svc: 'logging.test',
+  });
+  rootLogger.trace().msg('test');
+  childLogger.trace().msg('test');
+});

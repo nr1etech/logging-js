@@ -320,6 +320,9 @@ export class Logger {
   }
 }
 
+/**
+ * Returns the default log level. If the LOGGING_LEVEL environment variable is set, it will be used.
+ */
 function getDefaultLogLevel(): string | undefined {
   if (typeof process === 'object') {
     const level = process.env.LOGGING_LEVEL;
@@ -364,6 +367,12 @@ export interface LoggingConfig {
 
 let root: Logger | undefined;
 
+/**
+ * Initializes the logger. This function should be called once at the beginning of the application.
+ *
+ * @param options the logging configuration
+ * @param override if true, the logger will be reinitialized even if it has already been initialized
+ */
 export async function initialize(
   options: LoggingConfig,
   override?: boolean
@@ -402,18 +411,74 @@ export async function initialize(
 }
 
 /**
- * Returns the root logger. If the logger has not been initialized, an error is thrown.
+ * Shuts down the logger and unsets the root logger.
  */
-export function getRootLogger(): Logger {
-  if (!root) throw new Error('Logger has not been initialized');
-  return root;
+export function shutdown() {
+  if (root) {
+    root.pino().flush();
+    root = undefined;
+  }
+}
+
+function getProxiedRootLogger(): Logger {
+  return new Proxy(
+    {},
+    {
+      get: function (target, prop) {
+        if (
+          typeof prop === 'string' &&
+          ['trace', 'debug', 'info', 'warn', 'error', 'fatal'].includes(prop)
+        ) {
+          return (...args: never[]) => {
+            if (!root) throw new Error('Logger has not been initialized');
+            const method = root[prop as keyof typeof root];
+            if (typeof method === 'function') {
+              // @ts-ignore
+              return method.bind(root)(...args);
+            }
+            throw new Error(`Property ${prop} is not a function`);
+          };
+        }
+        return undefined;
+      },
+    }
+  ) as Logger;
+}
+
+function createProxiedLogger(name: string, log?: Logger): Logger {
+  return new Proxy(
+    {},
+    {
+      get: function (target, prop) {
+        if (
+          typeof prop === 'string' &&
+          ['trace', 'debug', 'info', 'warn', 'error', 'fatal'].includes(prop)
+        ) {
+          return (...args: never[]) => {
+            if (!root) throw new Error('Logger has not been initialized');
+            const realLogger = log
+              ? new Logger(log.pino().child({name}))
+              : new Logger(root.pino().child({name}));
+            const method = realLogger[prop as keyof typeof realLogger];
+            if (typeof method === 'function') {
+              // @ts-ignore
+              return method.bind(realLogger)(...args);
+            }
+            throw new Error(`Property ${prop} is not a function`);
+          };
+        }
+        return undefined;
+      },
+    }
+  ) as Logger;
 }
 
 /**
- * Returns the root logger. If the logger has not been initialized, undefined is returned.
+ * Returns the root logger. If the logger has not been initialized, an error is thrown.
  */
-export function getRootLoggerSafe(): Logger | undefined {
-  return root;
+export function getRootLogger(): Logger {
+  if (root) return root;
+  return getProxiedRootLogger();
 }
 
 /**
@@ -423,64 +488,9 @@ export function getRootLoggerSafe(): Logger | undefined {
  * @param log the logger to use. If not provided, the root logger is used.
  */
 export function getLogger(name: string, log?: Logger): Logger {
-  if (!root) throw new Error('Logger has not been initialized');
-  return log === undefined
-    ? new Logger(root.pino().child({name}))
-    : new Logger(log.pino().child({name}));
+  if (root)
+    return log === undefined
+      ? new Logger(root.pino().child({name}))
+      : new Logger(log.pino().child({name}));
+  return createProxiedLogger(name, log);
 }
-
-/**
- * Returns a child logger.
- *
- * @param name the name of the child logger
- * @param log the logger to use. If not provided, the root logger is used.
- */
-export function getLoggerSafe(name: string, log?: Logger): Logger | undefined {
-  if (!root) return undefined;
-  return log === undefined
-    ? new Logger(root.pino().child({name}))
-    : new Logger(log.pino().child({name}));
-}
-
-// // TODO Need the ability to add context to the logger
-// function createProxiedLogger(name: string, level?: Level): Logger {
-//   return new Proxy(
-//     {},
-//     {
-//       get: function (target, prop) {
-//         if (
-//           typeof prop === 'string' &&
-//           ['trace', 'debug', 'info', 'warn', 'error', 'fatal'].includes(prop)
-//         ) {
-//           return (...args: never[]) => {
-//             if (!root) throw new Error('Logger has not been initialized');
-//             const realLogger = root.child({name, level: level ?? root.level});
-//             const method = realLogger[prop as keyof typeof realLogger];
-//             if (typeof method === 'function') {
-//               return method.bind(realLogger)(...args);
-//             }
-//             throw new Error(`Property ${prop} is not a function`);
-//           };
-//         }
-//         return undefined;
-//       },
-//     }
-//   ) as Logger;
-// }
-
-// /**
-//  * Returns a child logger with the given name and level.
-//  *
-//  * @param name The name of the child logger
-//  * @param level The level of the child logger. If not provided, the level of the root logger is used.
-//  */
-// TODO Need the ability to add context to the logger
-// export function getLogger(
-//   name: string,
-//   ctx?: Record<string, unknown>,
-//   level?: Level
-// ): Logger {
-//   return !root
-//     ? createProxiedLogger(name, level)
-//     : root.child({name, level: level ?? root.level});
-// }
