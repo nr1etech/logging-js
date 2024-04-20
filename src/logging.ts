@@ -411,6 +411,13 @@ export async function initialize(
 }
 
 /**
+ * Returns the root logger if it has been initialized. If not, an error is thrown.
+ */
+export function isInitialized(): boolean {
+  return root !== undefined;
+}
+
+/**
  * Shuts down the logger and unsets the root logger.
  */
 export function shutdown() {

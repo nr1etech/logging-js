@@ -46,10 +46,12 @@ class TestClass {
 }
 
 test('Test Logging', async () => {
+  expect(logging.isInitialized()).toBeFalsy();
   await logging.initialize({
     level: 'trace',
     svc: 'logging-js',
   });
+  expect(logging.isInitialized()).toBeTruthy();
   const root = logging.getRootLogger();
   expect(root).toBeDefined();
   const child = logging.getLogger('child');
