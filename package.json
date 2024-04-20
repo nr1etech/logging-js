@@ -1,7 +1,7 @@
 {
   "name": "@nr1e/logging",
   "description": "Provides a standard logging pattern",
-  "version": "0.0.7",
+  "version": "0.0.8-alpha.0",
   "type": "module",
   "author": "NR1E, Inc.",
   "publishConfig": {
