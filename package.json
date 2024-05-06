@@ -37,13 +37,13 @@
     "typescript": "~5.1.6"
   },
   "dependencies": {
-    "pino": "^8.17.2",
+    "pino": "^9.0.0",
     "pino-abstract-transport": "^1.1.0",
     "sonic-boom": "^3.8.0",
     "tslib": "^2.6.2"
   },
   "peerDependencies": {
-    "pino": "^8.17.2"
+    "pino": "^9.0.0"
   },
   "exports": {
     ".": {
