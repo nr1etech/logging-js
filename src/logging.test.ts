@@ -1,4 +1,6 @@
-import * as logging from './logging.js';
+// eslint-disable-next-line n/no-unpublished-import
+import {expect, test} from 'vitest';
+import * as logging from './logging.mjs';
 
 import {Writable} from 'stream';
 

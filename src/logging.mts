@@ -6,7 +6,7 @@ import {
   TransportPipelineOptions,
   TransportMultiOptions,
 } from 'pino';
-import {getIpAddress, getProcessId, isAwsLambda} from './helpers.js';
+import {getIpAddress, getProcessId, isAwsLambda} from './helpers.mjs';
 
 /**
  * The log levels supported by this library.
@@ -380,7 +380,7 @@ export async function initialize(
   if (root === undefined || override) {
     const ip = await getIpAddress();
     const pid = getProcessId();
-    const plog = pino({
+    const plog = pino.pino({
       level: options?.level ?? getDefaultLogLevel() ?? 'info',
       browser: {asObject: true},
       serializers: {},
