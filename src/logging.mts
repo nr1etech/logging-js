@@ -375,8 +375,17 @@ let root: Logger | undefined;
  */
 export function initialize(options: LoggingConfig, override?: boolean): Logger {
   if (root === undefined || override) {
-    const ip = getIpAddress();
-    const pid = getProcessId();
+    const mixins: Record<string, string | number> = {};
+    if (!isAwsLambda()) {
+      const ip = getIpAddress();
+      if (ip) {
+        mixins.ip = ip;
+      }
+      const pid = getProcessId();
+      if (pid) {
+        mixins.pid = pid;
+      }
+    }
     const plog = pino.pino({
       level: options?.level ?? getDefaultLogLevel() ?? 'info',
       browser: {asObject: true},
@@ -385,8 +394,7 @@ export function initialize(options: LoggingConfig, override?: boolean): Logger {
         return {
           svc: options?.svc,
           name: options?.name ?? 'root',
-          ip,
-          pid,
+          ...mixins,
         };
       },
       transport: options?.transport,
