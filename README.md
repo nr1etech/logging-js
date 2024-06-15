@@ -10,7 +10,7 @@ adheres to the NR1E logging standard.
 To install using `pnpm`
 
 ```bash
-pnpm i @nr1e/logging-js
+pnpm i @nr1e/logging
 ```
 
 ## How to use
@@ -18,7 +18,7 @@ pnpm i @nr1e/logging-js
 Initialize logging in your application.
 
 ```typescript
-import * as logging from '@nr1e/logging-js';
+import * as logging from '@nr1e/logging';
 
 // Only needs to be performed once
 logging.initialize({
@@ -32,7 +32,7 @@ This only needs to be done once. Additional calls to initialize will have no eff
 In your modules, get a named logger
 
 ```typescript
-import * as logging from '@nr1e/logging-js';
+import * as logging from '@nr1e/logging';
 
 const log = logging.getLogger('my-module');
 ```
