@@ -373,12 +373,9 @@ let root: Logger | undefined;
  * @param options the logging configuration
  * @param override if true, the logger will be reinitialized even if it has already been initialized
  */
-export async function initialize(
-  options: LoggingConfig,
-  override?: boolean
-): Promise<Logger> {
+export function initialize(options: LoggingConfig, override?: boolean): Logger {
   if (root === undefined || override) {
-    const ip = await getIpAddress();
+    const ip = getIpAddress();
     const pid = getProcessId();
     const plog = pino.pino({
       level: options?.level ?? getDefaultLogLevel() ?? 'info',
