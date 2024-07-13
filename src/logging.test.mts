@@ -1,15 +1,16 @@
-// eslint-disable-next-line n/no-unpublished-import
 import {expect, test} from 'vitest';
-import * as logging from './logging.mjs';
-
+import * as logging from './index.mjs';
 import {Writable} from 'stream';
 
 class TestStream extends Writable {
   last: string | undefined;
   _write(
+    /* eslint-disable-next-line  @typescript-eslint/no-explicit-any */
     chunk: any,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     encoding?: string,
-    callback?: (error?: Error | undefined) => void
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    callback?: (error?: Error | undefined) => void,
   ) {
     this.last = chunk.toString();
   }
@@ -28,7 +29,7 @@ const original = process.stdout.write.bind(process.stdout);
 process.stdout.write = (
   chunk: string | Uint8Array,
   encodingOrCallback?: BufferEncoding | ((err?: Error | undefined) => void),
-  callback?: (err?: Error | undefined) => void
+  callback?: (err?: Error | undefined) => void,
 ) => {
   let encoding: BufferEncoding | undefined;
   if (typeof encodingOrCallback === 'string') {
@@ -43,15 +44,22 @@ process.stdout.write = (
 class TestClass {
   constructor(
     public foo: string,
-    public bar: number
+    public bar: number,
   ) {}
 }
 
-test('Test Logging', async () => {
+test('Test isInitialized', () => {
   expect(logging.isInitialized()).toBeFalsy();
-  await logging.initialize({
+});
+
+test('Test logging', () => {
+  logging.initialize({
     level: 'trace',
     svc: 'logging-js',
+    override: true,
+    includePid: true,
+    includeHost: true,
+    includeIp: true,
   });
   expect(logging.isInitialized()).toBeTruthy();
   const root = logging.getRootLogger();
@@ -67,7 +75,7 @@ test('Test Logging', async () => {
       ip: expect.any(String),
       pid: expect.any(Number),
       msg: 'test trace',
-    })
+    }),
   );
   child
     .trace()
@@ -81,12 +89,13 @@ test('Test Logging', async () => {
       svc: 'logging-js',
       ip: expect.any(String),
       pid: expect.any(Number),
+      host: expect.any(String),
       msg: 'test trace',
       bar: {
         foo: 'bar',
         something: 'something',
       },
-    })
+    }),
   );
   child.debug().obj('moo', {foo: 'bar'}).msg('test debug');
   child.info().obj('moo', {foo: 'bar'}).msg('test info');
@@ -102,7 +111,7 @@ test('Test Logging', async () => {
   child.fatal().obj('moo', {foo: 'bar'}).msg('test fatal');
 });
 
-test('Test isLevel', () => {
+test('Test logging levels', () => {
   expect(logging.isLevel('trace')).toBe(true);
   expect(logging.isLevel('debug')).toBe(true);
   expect(logging.isLevel('info')).toBe(true);
@@ -110,22 +119,100 @@ test('Test isLevel', () => {
   expect(logging.isLevel('error')).toBe(true);
   expect(logging.isLevel('fatal')).toBe(true);
   expect(logging.isLevel('foo')).toBe(false);
+  const rootLogger = logging.getRootLogger();
+  rootLogger.level('trace');
+  expect(rootLogger.isTrace()).toBe(true);
+  expect(rootLogger.getLevel()).toBe('trace');
+  rootLogger.level('debug');
+  expect(rootLogger.isDebug()).toBe(true);
+  expect(rootLogger.getLevel()).toBe('debug');
+  rootLogger.level('info');
+  expect(rootLogger.isInfo()).toBe(true);
+  expect(rootLogger.getLevel()).toBe('info');
+  rootLogger.level('warn');
+  expect(rootLogger.isWarn()).toBe(true);
+  expect(rootLogger.getLevel()).toBe('warn');
+  rootLogger.level('error');
+  expect(rootLogger.isError()).toBe(true);
+  expect(rootLogger.getLevel()).toBe('error');
+  rootLogger.level('fatal');
+  expect(rootLogger.isFatal()).toBe(true);
+  expect(rootLogger.getLevel()).toBe('fatal');
+  rootLogger.level('silent');
+  expect(rootLogger.isSilent()).toBe(true);
+  expect(rootLogger.getLevel()).toBe('silent');
 });
 
-test('Test lazy initialization', async () => {
+test('Test lazy initialization', () => {
   logging.shutdown();
   const rootLogger = logging.getRootLogger();
   const childLogger = logging.getLogger('child');
   expect(() => rootLogger.debug().msg('test')).toThrow(
-    'Logger has not been initialized'
+    'Logger has not been initialized',
   );
   expect(() => childLogger.debug().msg('test')).toThrow(
-    'Logger has not been initialized'
+    'Logger has not been initialized',
   );
-  await logging.initialize({
+  logging.initialize({
     level: 'trace',
     svc: 'logging.test',
+    name: 'Test lazy initialization',
+    override: true,
   });
   rootLogger.trace().msg('test');
   childLogger.trace().msg('test');
+});
+
+test('Test ctx methods', () => {
+  const rootLogger = logging.initialize({
+    level: 'info',
+    svc: 'logging.test',
+    name: 'ctx',
+    ctx: {foo: 'bar'},
+    override: true,
+  });
+  rootLogger.ctx({bar: 'baz'});
+  expect(rootLogger.getCtx().bar).toEqual('baz');
+  const logger = logging.getLogger();
+  expect(logger.getCtx().bar).toEqual('baz');
+});
+
+test('Test local context', () => {
+  const log = logging.initialize({
+    svc: 'logging.test',
+    name: 'local',
+    level: 'info',
+    override: true,
+  });
+
+  log.info().thread('test').msg('test');
+  expect(stream.json()).toEqual(
+    expect.objectContaining({
+      level: 30,
+      time: expect.any(Number),
+      name: 'local',
+      svc: 'logging.test',
+      msg: 'test',
+      thread: 'test',
+    }),
+  );
+
+  log
+    .error()
+    .err({
+      type: 'Error',
+      message: 'error occurred',
+      stack: 'some stack',
+    })
+    .msg('test');
+  expect(stream.json()).toEqual(
+    expect.objectContaining({
+      level: 50,
+      time: expect.any(Number),
+      name: 'local',
+      svc: 'logging.test',
+      msg: 'test',
+      err: {type: 'Object', message: 'error occurred', stack: 'some stack'}, // TODO Object should be "Error"
+    }),
+  );
 });

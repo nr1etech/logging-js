@@ -54,7 +54,7 @@ You can also log nested objects
 ```typescript
 log.info(
     {foo: 'bar', nested: {foo: 'bar'}},
-    'Just another day in the life of a logger'
+    'Just another day in the life of a logger',
 );
 ```
 

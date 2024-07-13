@@ -6,7 +6,7 @@ import {
   TransportPipelineOptions,
   TransportMultiOptions,
 } from 'pino';
-import {getIpAddress, getProcessId, isAwsLambda} from './helpers.mjs';
+import {getIpAddress} from './helpers.mjs';
 
 /**
  * The log levels supported by this library.
@@ -59,22 +59,6 @@ export interface DistributedTraceContext {
   flags: string;
 }
 
-interface TypedError {
-  type: string;
-  message: string;
-  stack: string;
-}
-
-function isTypedError(err: unknown): err is TypedError {
-  return (
-    typeof err === 'object' &&
-    err !== null &&
-    'type' in err &&
-    'message' in err &&
-    'stack' in err
-  );
-}
-
 /**
  * Represents a log entry.
  */
@@ -108,6 +92,9 @@ export type Context = Record<string, unknown>;
  * structured logging pattern.
  */
 export class Logger {
+  public readonly svc: string;
+  public readonly name: string;
+  protected log: PLogger;
   protected entryCtx: Context;
   protected entry: Entry;
   protected entryLevel:
@@ -140,15 +127,10 @@ export class Logger {
   }
 
   protected err(err: unknown): Entry {
+    console.log(err);
     if (err instanceof Error) {
       this.entryCtx['err'] = {
         type: err.name,
-        message: err.message,
-        stack: err.stack,
-      };
-    } else if (isTypedError(err)) {
-      this.entryCtx['err'] = {
-        type: err.type,
         message: err.message,
         stack: err.stack,
       };
@@ -203,7 +185,10 @@ export class Logger {
     this.entryLevel = undefined;
   }
 
-  constructor(protected log: PLogger) {
+  constructor(svc: string, name: string, log: PLogger) {
+    this.svc = svc;
+    this.name = name;
+    this.log = log;
     this.entryCtx = {};
     this.entry = {
       msg: this.msg.bind(this),
@@ -274,6 +259,15 @@ export class Logger {
 
   fatal(): Entry {
     this.entryLevel = this.log.fatal;
+    return this.entry;
+  }
+
+  isSilent(): boolean {
+    return this.log.levelVal === Infinity;
+  }
+
+  silent(): Entry {
+    this.entryLevel = this.log.silent;
     return this.entry;
   }
 
@@ -363,6 +357,26 @@ export interface LoggingConfig {
     | TransportMultiOptions
     | TransportPipelineOptions
     | undefined;
+
+  /**
+   * If true, the logger will be reinitialized even if it has already been initialized.
+   */
+  override?: boolean;
+
+  /**
+   * If true, the logger will include the process id in the log context. Default is false.
+   */
+  includePid?: boolean;
+
+  /**
+   * If true, the logger will include the IP address in the log context. Default is false.
+   */
+  includeIp?: boolean;
+
+  /**
+   * If true, the logger will include the name of the host in the log context. Default is false.
+   */
+  includeHost?: boolean;
 }
 
 let root: Logger | undefined;
@@ -371,46 +385,52 @@ let root: Logger | undefined;
  * Initializes the logger. This function should be called once at the beginning of the application.
  *
  * @param options the logging configuration
- * @param override if true, the logger will be reinitialized even if it has already been initialized
  */
-export function initialize(options: LoggingConfig, override?: boolean): Logger {
-  if (root === undefined || override) {
+export function initialize(options: LoggingConfig): Logger {
+  if (root === undefined || options.override) {
     const mixins: Record<string, string | number> = {};
-    if (!isAwsLambda()) {
+    if (options.includeIp) {
       const ip = getIpAddress();
       if (ip) {
         mixins.ip = ip;
       }
-      const pid = getProcessId();
-      if (pid) {
-        mixins.pid = pid;
-      }
     }
+    const svc = options.svc;
+    const name = options.name ?? 'root';
     const plog = pino.pino({
       level: options?.level ?? getDefaultLogLevel() ?? 'info',
       browser: {asObject: true},
       serializers: {},
       mixin: () => {
         return {
-          svc: options?.svc,
-          name: options?.name ?? 'root',
+          svc,
+          name,
           ...mixins,
         };
       },
       transport: options?.transport,
       formatters: {
         bindings: (bindings: Bindings) => {
-          if (!isAwsLambda) {
-            return {
-              host: bindings['hostname'],
-            };
+          if (!options.includeHost) {
+            delete bindings.hostname;
           } else {
-            return {};
+            bindings = {
+              ...bindings,
+              host: bindings.hostname,
+            };
+            delete bindings.hostname;
           }
+          if (!options.includePid) {
+            delete bindings.pid;
+          }
+          return bindings;
         },
       },
     });
-    root = new Logger(plog);
+    if (options.ctx) {
+      plog.setBindings(options.ctx);
+    }
+    root = new Logger(svc, name, plog);
   }
   return root;
 }
@@ -445,7 +465,7 @@ function getProxiedRootLogger(): Logger {
             if (!root) throw new Error('Logger has not been initialized');
             const method = root[prop as keyof typeof root];
             if (typeof method === 'function') {
-              // @ts-ignore
+              // @ts-expect-error - TS doesn't like the bind call
               return method.bind(root)(...args);
             }
             throw new Error(`Property ${prop} is not a function`);
@@ -453,7 +473,7 @@ function getProxiedRootLogger(): Logger {
         }
         return undefined;
       },
-    }
+    },
   ) as Logger;
 }
 
@@ -469,11 +489,11 @@ function createProxiedLogger(name: string, log?: Logger): Logger {
           return (...args: never[]) => {
             if (!root) throw new Error('Logger has not been initialized');
             const realLogger = log
-              ? new Logger(log.pino().child({name}))
-              : new Logger(root.pino().child({name}));
+              ? new Logger(log.svc, name, log.pino().child({name}))
+              : new Logger(root.svc, name, root.pino().child({name}));
             const method = realLogger[prop as keyof typeof realLogger];
             if (typeof method === 'function') {
-              // @ts-ignore
+              // @ts-expect-error - TS doesn't like the bind call
               return method.bind(realLogger)(...args);
             }
             throw new Error(`Property ${prop} is not a function`);
@@ -481,7 +501,7 @@ function createProxiedLogger(name: string, log?: Logger): Logger {
         }
         return undefined;
       },
-    }
+    },
   ) as Logger;
 }
 
@@ -499,10 +519,11 @@ export function getRootLogger(): Logger {
  * @param name the name of the child logger
  * @param log the logger to use. If not provided, the root logger is used.
  */
-export function getLogger(name: string, log?: Logger): Logger {
-  if (root)
-    return log === undefined
-      ? new Logger(root.pino().child({name}))
-      : new Logger(log.pino().child({name}));
+export function getLogger(name?: string, log?: Logger): Logger {
+  name = log ? (name ?? `${log.name}.child`) : (name ?? `${root?.name}.child`);
+  if (root) {
+    log = log ?? root;
+    return new Logger(log.svc, name, log.pino().child({name}));
+  }
   return createProxiedLogger(name, log);
 }
