@@ -109,7 +109,7 @@ Then add the following to your `angular.json` file inside `compilerOptions`
 
 [github-url]: https://github.com/nr1etech/logging-js/actions
 [github-image]: https://github.com/nr1etech/logging-js/workflows/ci/badge.svg
-[npm-url]: https://npmjs.org/package/@nr1e/logging-js
+[npm-url]: https://npmjs.org/package/@nr1e/logging
 [npm-image]: https://img.shields.io/npm/v/@nre1/logging-js.svg
 [gts-image]: https://img.shields.io/badge/code%20style-google-blueviolet.svg
 [gts-url]: https://github.com/google/gts
