@@ -13,9 +13,9 @@ jobs:
   publish:
     uses: nr1etech/github-workflows/.github/workflows/javascript-library.yml@main
     with:
-      publish-dir: "dist"
-      node-versions: "[18,20,22]"
-      publish-node-version: "22"
+      publish-dir: 'dist'
+      node-versions: '[18,20,22]'
+      publish-node-version: '22'
     secrets:
       npm-auth-token: ${{ secrets.NPM_AUTH_TOKEN }}
       app-id: ${{ secrets.RELEASE_BOT_ID }}

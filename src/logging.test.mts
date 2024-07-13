@@ -1,4 +1,3 @@
-// eslint-disable-next-line n/no-unpublished-import
 import {expect, test} from 'vitest';
 import * as logging from './logging.mjs';
 
@@ -7,9 +6,12 @@ import {Writable} from 'stream';
 class TestStream extends Writable {
   last: string | undefined;
   _write(
+    /* eslint-disable-next-line  @typescript-eslint/no-explicit-any */
     chunk: any,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     encoding?: string,
-    callback?: (error?: Error | undefined) => void
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    callback?: (error?: Error | undefined) => void,
   ) {
     this.last = chunk.toString();
   }
@@ -28,7 +30,7 @@ const original = process.stdout.write.bind(process.stdout);
 process.stdout.write = (
   chunk: string | Uint8Array,
   encodingOrCallback?: BufferEncoding | ((err?: Error | undefined) => void),
-  callback?: (err?: Error | undefined) => void
+  callback?: (err?: Error | undefined) => void,
 ) => {
   let encoding: BufferEncoding | undefined;
   if (typeof encodingOrCallback === 'string') {
@@ -43,7 +45,7 @@ process.stdout.write = (
 class TestClass {
   constructor(
     public foo: string,
-    public bar: number
+    public bar: number,
   ) {}
 }
 
@@ -67,7 +69,7 @@ test('Test Logging', async () => {
       ip: expect.any(String),
       pid: expect.any(Number),
       msg: 'test trace',
-    })
+    }),
   );
   child
     .trace()
@@ -86,7 +88,7 @@ test('Test Logging', async () => {
         foo: 'bar',
         something: 'something',
       },
-    })
+    }),
   );
   child.debug().obj('moo', {foo: 'bar'}).msg('test debug');
   child.info().obj('moo', {foo: 'bar'}).msg('test info');
@@ -117,10 +119,10 @@ test('Test lazy initialization', async () => {
   const rootLogger = logging.getRootLogger();
   const childLogger = logging.getLogger('child');
   expect(() => rootLogger.debug().msg('test')).toThrow(
-    'Logger has not been initialized'
+    'Logger has not been initialized',
   );
   expect(() => childLogger.debug().msg('test')).toThrow(
-    'Logger has not been initialized'
+    'Logger has not been initialized',
   );
   await logging.initialize({
     level: 'trace',

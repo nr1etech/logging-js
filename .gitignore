@@ -1,13 +1,9 @@
 notes.txt
 *.zip
 *.js
-!jest.config.js
-*.d.ts
-*.d.ts.map
-*.js.map
+*.d.*
+*.map
 node_modules
 dist
-ncryptyr.json
-!.prettierrc.js
 site
 coverage

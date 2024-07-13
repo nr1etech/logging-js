@@ -445,7 +445,7 @@ function getProxiedRootLogger(): Logger {
             if (!root) throw new Error('Logger has not been initialized');
             const method = root[prop as keyof typeof root];
             if (typeof method === 'function') {
-              // @ts-ignore
+              // @ts-expect-error - TS doesn't like the bind call
               return method.bind(root)(...args);
             }
             throw new Error(`Property ${prop} is not a function`);
@@ -453,7 +453,7 @@ function getProxiedRootLogger(): Logger {
         }
         return undefined;
       },
-    }
+    },
   ) as Logger;
 }
 
@@ -473,7 +473,7 @@ function createProxiedLogger(name: string, log?: Logger): Logger {
               : new Logger(root.pino().child({name}));
             const method = realLogger[prop as keyof typeof realLogger];
             if (typeof method === 'function') {
-              // @ts-ignore
+              // @ts-expect-error - TS doesn't like the bind call
               return method.bind(realLogger)(...args);
             }
             throw new Error(`Property ${prop} is not a function`);
@@ -481,7 +481,7 @@ function createProxiedLogger(name: string, log?: Logger): Logger {
         }
         return undefined;
       },
-    }
+    },
   ) as Logger;
 }
 

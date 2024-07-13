@@ -1,7 +1,3 @@
-dist
-.editorconfig
-.idea
-.github
-pnpm-lock.yaml
-site
 coverage
+dist
+site
