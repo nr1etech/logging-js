@@ -32,7 +32,7 @@
     "@vitest/coverage-v8": "^1.6.0",
     "eslint": "^8.57.0",
     "prettier": "^3.3.2",
-    "typedoc": "^0.25.13",
+    "typedoc": "^0.26.4",
     "typescript": "^5.4.5",
     "typescript-eslint": "^7.16.0",
     "vitest": "^1.6.0"
