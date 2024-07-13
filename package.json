@@ -18,7 +18,7 @@
   "scripts": {
     "build": "tsc",
     "prebuild": "prettier --check . && eslint .",
-    "postbuild": "cp package.json dist",
+    "postbuild": "cp package.json README.md dist",
     "watch": "tsc -w",
     "test": "vitest run --coverage",
     "clean": "rm -rf dist && rm -rf site && rm -rf coverage",
