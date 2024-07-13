@@ -1,7 +1,7 @@
 {
   "name": "@nr1e/logging",
   "description": "Provides a standard logging pattern",
-  "version": "1.1.1-alpha.0",
+  "version": "1.2.0",
   "type": "module",
   "author": "NR1E, Inc.",
   "publishConfig": {
@@ -32,8 +32,8 @@
     "@vitest/coverage-v8": "^1.6.0",
     "eslint": "^8.57.0",
     "prettier": "^3.3.2",
-    "typedoc": "^0.25.13",
-    "typescript": "^5.4.5",
+    "typedoc": "^0.26.4",
+    "typescript": "^5.5.3",
     "typescript-eslint": "^7.16.0",
     "vitest": "^1.6.0"
   },

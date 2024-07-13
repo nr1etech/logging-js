@@ -1,10 +1,3 @@
-export function isAwsLambda(): boolean {
-  if (typeof process === 'object') {
-    return !!process.env.LAMBDA_TASK_ROOT;
-  }
-  return false;
-}
-
 export function getIpAddress(): string | undefined {
   if (typeof process === 'object') {
     try {
@@ -29,13 +22,6 @@ export function getIpAddress(): string | undefined {
     } catch (e) {
       // os module is not available
     }
-  }
-  return undefined;
-}
-
-export function getProcessId(): number | undefined {
-  if (typeof process === 'object') {
-    return process.pid;
   }
   return undefined;
 }
