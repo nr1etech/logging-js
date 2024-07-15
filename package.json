@@ -26,7 +26,7 @@
     "site": "typedoc --out site \"src/**/*.ts\" --exclude \"src/**/*.test.ts\""
   },
   "devDependencies": {
-    "@eslint/js": "^8.57.0",
+    "@eslint/js": "^9.7.0",
     "@types/eslint__js": "^8.42.3",
     "@types/node": "^20.14.2",
     "@vitest/coverage-v8": "^1.6.0",
