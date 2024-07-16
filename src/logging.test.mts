@@ -1,6 +1,7 @@
 import {expect, test} from 'vitest';
 import * as logging from './index.mjs';
 import {Writable} from 'stream';
+import {getIpAddress} from './index.mjs';
 
 class TestStream extends Writable {
   last: string | undefined;
@@ -52,14 +53,14 @@ test('Test isInitialized', () => {
   expect(logging.isInitialized()).toBeFalsy();
 });
 
-test('Test logging', () => {
+test('Test logging', async () => {
   logging.initialize({
     level: 'trace',
     svc: 'logging-js',
     override: true,
     includePid: true,
     includeHost: true,
-    includeIp: true,
+    ip: getIpAddress(),
   });
   expect(logging.isInitialized()).toBeTruthy();
   const root = logging.getRootLogger();
