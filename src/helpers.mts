@@ -1,8 +1,7 @@
+import * as os from 'os';
 export function getIpAddress(): string | undefined {
   if (typeof process === 'object') {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const os = require('os');
       let ipv6: string | undefined = undefined;
       let ipv4: string | undefined = undefined;
       const ifaces = os.networkInterfaces();

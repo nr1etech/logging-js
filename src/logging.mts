@@ -6,7 +6,6 @@ import {
   TransportPipelineOptions,
   TransportMultiOptions,
 } from 'pino';
-import {getIpAddress} from './helpers.mjs';
 
 /**
  * The log levels supported by this library.
@@ -369,9 +368,9 @@ export interface LoggingConfig {
   includePid?: boolean;
 
   /**
-   * If true, the logger will include the IP address in the log context. Default is false.
+   * The ip address to include in the log context. Use the getIpAddress function to get the ip address.
    */
-  includeIp?: boolean;
+  ip?: string;
 
   /**
    * If true, the logger will include the name of the host in the log context. Default is false.
@@ -389,11 +388,8 @@ let root: Logger | undefined;
 export function initialize(options: LoggingConfig): Logger {
   if (root === undefined || options.override) {
     const mixins: Record<string, string | number> = {};
-    if (options.includeIp) {
-      const ip = getIpAddress();
-      if (ip) {
-        mixins.ip = ip;
-      }
+    if (options.ip) {
+      mixins.ip = options.ip;
     }
     const svc = options.svc;
     const name = options.name ?? 'root';
