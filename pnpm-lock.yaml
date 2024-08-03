@@ -9,7 +9,7 @@ importers:
   .:
     dependencies:
       pino:
-        specifier: ^9.2.0
+        specifier: ^9.3.2
         version: 9.3.2
       pino-abstract-transport:
         specifier: ^1.2.0

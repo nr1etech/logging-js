@@ -38,14 +38,14 @@
     "vitest": "^2.0.5"
   },
   "dependencies": {
-    "pino": "^9.2.0",
+    "pino": "^9.3.2",
     "pino-abstract-transport": "^1.2.0",
     "remove": "^0.1.5",
     "sonic-boom": "^4.0.1",
     "tslib": "^2.6.3"
   },
   "peerDependencies": {
-    "pino": "^9.2.0"
+    "pino": "^9.3.2"
   },
   "exports": {
     ".": {
