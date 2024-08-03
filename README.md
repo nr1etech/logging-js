@@ -72,7 +72,11 @@ To log an error
 try {
     throw new Error('An error occurred');
 } catch (err) {
-    log.error().err(err).msg('Human sacrifice, dogs and cats living together... MASS HYSTERIA!');
+    log.error()
+        .err(err)
+        .msg(
+            'Human sacrifice, dogs and cats living together... MASS HYSTERIA!',
+        );
 }
 ```
 
@@ -82,7 +86,12 @@ To log an error with additional context
 try {
     throw new Error('An error occurred');
 } catch (err) {
-    log.error().err(err).obj({foo: 'bar'}).msg('Human sacrifice, dogs and cats living together... MASS HYSTERIA!');
+    log.error()
+        .err(err)
+        .obj({foo: 'bar'})
+        .msg(
+            'Human sacrifice, dogs and cats living together... MASS HYSTERIA!',
+        );
 }
 ```
 
