@@ -41,6 +41,12 @@ To obtain a named child logger of another logger
 const log = logging.getLogger('my-module', parentLogger);
 ```
 
+To add a permanent context to a logger
+
+```typescript
+log.ctx({foo: 'bar'});
+```
+
 To log an info message
 
 ```typescript
