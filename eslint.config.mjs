@@ -5,7 +5,7 @@ import tseslint from 'typescript-eslint';
 
 const config = [
   {
-    ignores: ['src/**/*.mjs', 'src/**/*.d.*'],
+    ignores: ['coverage', 'dist', 'site'],
   },
   ...tseslint.config(
     eslint.configs.recommended,
