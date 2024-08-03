@@ -94,31 +94,6 @@ try {
 }
 ```
 
-## Angular Projects
-
-If you are trying to use this library with Angular, you will need to add the
-`os-browserify` package to your project.
-
-```bash
-pnpm i --save-dev os-browserify
-```
-
-Then add the following to your `angular.json` file inside `compilerOptions`
-
-```
-{
-  ...
-  compilerOptions: {
-    ...
-    "paths": {
-      "os": [
-        "./node_modules/os-browserify"
-      ]
-    }
-  }
-}
-```
-
 [github-url]: https://github.com/nr1etech/logging-js/actions
 [github-image]: https://github.com/nr1etech/logging-js/workflows/ci/badge.svg
 [npm-url]: https://npmjs.com/package/@nr1e/logging
