@@ -1,7 +1,6 @@
 # Logging
 
 [![NPM Version][npm-image]][npm-url]
-[![TypeScript Style Guide][gts-image]][gts-url]
 [![GitHub Actions][github-image]][github-url]
 
 Provides a simple logging interface for typescript projects that
@@ -123,6 +122,4 @@ Then add the following to your `angular.json` file inside `compilerOptions`
 [github-url]: https://github.com/nr1etech/logging-js/actions
 [github-image]: https://github.com/nr1etech/logging-js/workflows/ci/badge.svg
 [npm-url]: https://npmjs.com/package/@nr1e/logging
-[npm-image]: https://img.shields.io/npm/v/@nre1/logging.svg
-[gts-image]: https://img.shields.io/badge/code%20style-google-blueviolet.svg
-[gts-url]: https://github.com/google/gts
+[npm-image]: https://img.shields.io/npm/v/@nr1e/logging.svg
