@@ -25,13 +25,13 @@ importers:
         version: 2.6.3
     devDependencies:
       '@eslint/js':
-        specifier: ^8.57.0
-        version: 8.57.0
+        specifier: ^9.8.0
+        version: 9.8.0
       '@types/eslint__js':
         specifier: ^8.42.3
         version: 8.42.3
       '@types/node':
-        specifier: ^22.0.0
+        specifier: ^22.1.0
         version: 22.1.0
       '@vitest/coverage-v8':
         specifier: ^2.0.5
@@ -40,13 +40,13 @@ importers:
         specifier: ^9.8.0
         version: 9.8.0
       prettier:
-        specifier: ^3.3.2
+        specifier: ^3.3.3
         version: 3.3.3
       typedoc:
-        specifier: ^0.26.4
+        specifier: ^0.26.5
         version: 0.26.5(typescript@5.5.4)
       typescript:
-        specifier: ^5.5.3
+        specifier: ^5.5.4
         version: 5.5.4
       typescript-eslint:
         specifier: ^8.0.1
@@ -236,10 +236,6 @@ packages:
   '@eslint/eslintrc@3.1.0':
     resolution: {integrity: sha512-4Bfj15dVJdoy3RfZmmo86RK1Fwzn6SstsvK9JS+BaVKqC6QQQQyXekNaC+g+LKNgkQ+2VhGAzm6hO40AhMR3zQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-
-  '@eslint/js@8.57.0':
-    resolution: {integrity: sha512-Ys+3g2TaW7gADOJzPt83SJtCDhMjndcDMFVQ/Tj9iA1BfJzFKD9mAUXT3OenpuPHbI6P/myECxRJrofUsDx/5g==}
-    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
 
   '@eslint/js@9.8.0':
     resolution: {integrity: sha512-MfluB7EUfxXtv3i/++oh89uzAr4PDI4nn201hsp+qaXqsjAWzinlZEHEfPgAX4doIlKvPG/i0A9dpKxOLII8yA==}
@@ -1692,8 +1688,6 @@ snapshots:
       strip-json-comments: 3.1.1
     transitivePeerDependencies:
       - supports-color
-
-  '@eslint/js@8.57.0': {}
 
   '@eslint/js@9.8.0': {}
 

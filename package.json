@@ -26,14 +26,14 @@
     "site": "typedoc --out site \"src/**/*.ts\" --exclude \"src/**/*.test.ts\""
   },
   "devDependencies": {
-    "@eslint/js": "^8.57.0",
+    "@eslint/js": "^9.8.0",
     "@types/eslint__js": "^8.42.3",
-    "@types/node": "^22.0.0",
+    "@types/node": "^22.1.0",
     "@vitest/coverage-v8": "^2.0.5",
     "eslint": "^9.8.0",
-    "prettier": "^3.3.2",
-    "typedoc": "^0.26.4",
-    "typescript": "^5.5.3",
+    "prettier": "^3.3.3",
+    "typedoc": "^0.26.5",
+    "typescript": "^5.5.4",
     "typescript-eslint": "^8.0.1",
     "vitest": "^2.0.5"
   },
