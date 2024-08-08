@@ -30,11 +30,11 @@
     "@types/eslint__js": "^8.42.3",
     "@types/node": "^22.0.0",
     "@vitest/coverage-v8": "^2.0.5",
-    "eslint": "^8.57.0",
+    "eslint": "^9.8.0",
     "prettier": "^3.3.2",
     "typedoc": "^0.26.4",
     "typescript": "^5.5.3",
-    "typescript-eslint": "^7.16.0",
+    "typescript-eslint": "^8.0.1",
     "vitest": "^2.0.5"
   },
   "dependencies": {

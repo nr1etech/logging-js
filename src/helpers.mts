@@ -18,6 +18,7 @@ export function getIpAddress(): string | undefined {
         }
       }
       return ipv4 ?? ipv6;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       // os module is not available
     }
