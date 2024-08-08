@@ -7,3 +7,4 @@ node_modules
 dist
 site
 coverage
+one-off.test.mts
