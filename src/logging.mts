@@ -62,10 +62,13 @@ export interface DistributedTraceContext {
  * Represents a log entry.
  */
 export interface Entry {
-  str: (key: string, value: string) => Entry;
-  num: (key: string, value: number) => Entry;
-  bool: (key: string, value: boolean) => Entry;
-  obj: (key: string, value: Record<string, unknown> | object) => Entry;
+  str: (key: string, value: string | undefined | null) => Entry;
+  num: (key: string, value: number | undefined | null) => Entry;
+  bool: (key: string, value: boolean | undefined | null) => Entry;
+  obj: (
+    key: string,
+    value: Record<string, unknown> | object | undefined | null,
+  ) => Entry;
   unknown: (key: string, value: unknown) => Entry;
   err: (err: unknown) => Entry;
   thread: (thread: string) => Entry;
@@ -100,22 +103,25 @@ export class Logger {
     | ((ctx: Context, msg?: string, ...args: string[]) => void)
     | undefined;
 
-  protected str(key: string, value: string): Entry {
+  protected str(key: string, value: string | undefined | null): Entry {
     this.entryCtx[key] = value;
     return this.entry;
   }
 
-  protected num(key: string, value: number): Entry {
+  protected num(key: string, value: number | undefined | null): Entry {
     this.entryCtx[key] = value;
     return this.entry;
   }
 
-  protected bool(key: string, value: boolean): Entry {
+  protected bool(key: string, value: boolean | undefined | null): Entry {
     this.entryCtx[key] = value;
     return this.entry;
   }
 
-  protected obj(key: string, value: object | Record<string, unknown>): Entry {
+  protected obj(
+    key: string,
+    value: object | Record<string, unknown> | undefined | null,
+  ): Entry {
     this.entryCtx[key] = value;
     return this.entry;
   }

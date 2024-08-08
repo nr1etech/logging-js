@@ -217,3 +217,22 @@ test('Test local context', () => {
     }),
   );
 });
+
+test("Test null or defined values don't break", () => {
+  const log = logging.initialize({
+    level: 'info',
+    svc: 'logging.test',
+    name: 'ctx',
+    override: true,
+  });
+  log.info().str('foo', undefined).msg('test');
+  expect(stream.json()).toEqual(
+    expect.objectContaining({
+      level: 30,
+      time: expect.any(Number),
+      name: 'ctx',
+      svc: 'logging.test',
+      msg: 'test',
+    }),
+  );
+});
