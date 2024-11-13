@@ -1,10 +1,13 @@
+.idea
 notes.txt
 *.zip
 *.js
-*.d.*
-*.map
+!jest.config.js
+*.d.ts
 node_modules
 dist
+!.prettierrc.js
+src/one-off.test.mts
 site
 coverage
-one-off.test.mts
+schema.graphql

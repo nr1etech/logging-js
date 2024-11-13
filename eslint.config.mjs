@@ -1,15 +1,18 @@
-// @ts-check
-
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 
-const config = [
+const config = tseslint.config(
   {
-    ignores: ['coverage', 'dist', 'site'],
+    ignores: [
+      'dist',
+      'coverage',
+      'node_modules',
+      '**/*.js',
+      '**/*.d.*',
+      '**/*.map',
+    ],
   },
-  ...tseslint.config(
-    eslint.configs.recommended,
-    ...tseslint.configs.recommended,
-  ),
-];
+  eslint.configs.recommended,
+  ...tseslint.configs.recommended,
+);
 export default config;
