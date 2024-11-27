@@ -10,7 +10,7 @@ import {
 /**
  * The log levels supported by this library.
  */
-export type Level =
+export type LogLevel =
   | 'silent'
   | 'trace'
   | 'debug'
@@ -24,7 +24,7 @@ export type Level =
  *
  * @param level The log level to check.
  */
-export function isLevel(level: string): level is Level {
+export function isLevel(level: string): level is LogLevel {
   return [
     'silent',
     'trace',
@@ -306,7 +306,7 @@ export class Logger {
    *
    * @param level the log level to set
    */
-  level(level: Level): Logger {
+  level(level: LogLevel): Logger {
     this.log.level = level;
     return this;
   }
@@ -314,8 +314,8 @@ export class Logger {
   /**
    * Returns the current log level.
    */
-  getLevel(): Level {
-    return this.log.level as Level;
+  getLevel(): LogLevel {
+    return this.log.level as LogLevel;
   }
 }
 
@@ -347,7 +347,7 @@ export interface LoggingConfig {
   /**
    * The default log level. If not provided, the environment variable LOGGING_LEVEL is used and if not found 'warn' is used.
    */
-  level?: Level;
+  level?: LogLevel;
 
   /**
    * The context to add to the logger.
