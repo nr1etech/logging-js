@@ -330,6 +330,8 @@ function getDefaultLogLevel(): string | undefined {
   return undefined;
 }
 
+export type LogLevelFormat = 'numeric' | 'lowercase' | 'uppercase';
+
 /**
  * Options for logging initialization.
  */
@@ -382,6 +384,11 @@ export interface LoggingConfig {
    * If true, the logger will include the name of the host in the log context. Default is false.
    */
   includeHost?: boolean;
+
+  /**
+   * The format to output the log level with. Default is "numeric".
+   */
+  logLevelFormat?: LogLevelFormat;
 }
 
 let root: Logger | undefined;
@@ -412,6 +419,20 @@ export function initialize(options: LoggingConfig): Logger {
       },
       transport: options?.transport,
       formatters: {
+        ...(options.logLevelFormat === 'uppercase'
+          ? {
+              level(label) {
+                return {level: label.toUpperCase()};
+              },
+            }
+          : {}),
+        ...(options.logLevelFormat === 'lowercase'
+          ? {
+              level(label) {
+                return {level: label};
+              },
+            }
+          : {}),
         bindings: (bindings: Bindings) => {
           if (!options.includeHost) {
             delete bindings.hostname;

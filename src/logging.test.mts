@@ -236,3 +236,43 @@ test("Test null or defined values don't break", () => {
     }),
   );
 });
+
+test('Test uppercase level', () => {
+  const log = logging.initialize({
+    level: 'info',
+    svc: 'logging.test',
+    name: 'ctx',
+    override: true,
+    logLevelFormat: 'uppercase',
+  });
+  log.info().str('foo', undefined).msg('test');
+  expect(stream.json()).toEqual(
+    expect.objectContaining({
+      level: 'INFO',
+      time: expect.any(Number),
+      name: 'ctx',
+      svc: 'logging.test',
+      msg: 'test',
+    }),
+  );
+});
+
+test('Test lowercase level', () => {
+  const log = logging.initialize({
+    level: 'info',
+    svc: 'logging.test',
+    name: 'ctx',
+    override: true,
+    logLevelFormat: 'lowercase',
+  });
+  log.info().str('foo', undefined).msg('test');
+  expect(stream.json()).toEqual(
+    expect.objectContaining({
+      level: 'info',
+      time: expect.any(Number),
+      name: 'ctx',
+      svc: 'logging.test',
+      msg: 'test',
+    }),
+  );
+});
