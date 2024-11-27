@@ -393,7 +393,7 @@ export interface LoggingConfig {
   logLevelFormat?: LogLevelFormat;
 
   /**
-   * The format to output the timestamp with. Default is "iso".
+   * The format to output the timestamp with. Default is "epoch".
    */
   timestampFormat?: TimestampFormat;
 
@@ -433,10 +433,10 @@ export function initialize(options: LoggingConfig): Logger {
       timestamp() {
         if (options.timestampFormat === 'unix') {
           return `,"${options.timestampLabel ?? 'time'}":${Math.round(Date.now() / 1000.0)}`;
-        } else if (options.timestampFormat === 'epoch') {
-          return `,"${options.timestampLabel ?? 'time'}":${Date.now()}`;
-        } else {
+        } else if (options.timestampFormat === 'iso') {
           return `,"${options.timestampLabel ?? 'time'}":"${new Date(Date.now()).toISOString()}"`;
+        } else {
+          return `,"${options.timestampLabel ?? 'time'}":${Date.now()}`;
         }
       },
       formatters: {

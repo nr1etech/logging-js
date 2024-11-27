@@ -70,7 +70,7 @@ test('Test logging', async () => {
   expect(stream.json()).toEqual(
     expect.objectContaining({
       level: 10,
-      time: expect.any(String),
+      time: expect.any(Number),
       name: 'root',
       svc: 'logging-js',
       ip: expect.any(String),
@@ -85,7 +85,7 @@ test('Test logging', async () => {
   expect(stream.json()).toEqual(
     expect.objectContaining({
       level: 10,
-      time: expect.any(String),
+      time: expect.any(Number),
       name: 'root',
       svc: 'logging-js',
       ip: expect.any(String),
@@ -190,7 +190,7 @@ test('Test local context', () => {
   expect(stream.json()).toEqual(
     expect.objectContaining({
       level: 30,
-      time: expect.any(String),
+      time: expect.any(Number),
       name: 'local',
       svc: 'logging.test',
       msg: 'test',
@@ -209,7 +209,7 @@ test('Test local context', () => {
   expect(stream.json()).toEqual(
     expect.objectContaining({
       level: 50,
-      time: expect.any(String),
+      time: expect.any(Number),
       name: 'local',
       svc: 'logging.test',
       msg: 'test',
@@ -229,7 +229,7 @@ test("Test null or defined values don't break", () => {
   expect(stream.json()).toEqual(
     expect.objectContaining({
       level: 30,
-      time: expect.any(String),
+      time: expect.any(Number),
       name: 'ctx',
       svc: 'logging.test',
       msg: 'test',
@@ -249,7 +249,7 @@ test('Test uppercase level', () => {
   expect(stream.json()).toEqual(
     expect.objectContaining({
       level: 'INFO',
-      time: expect.any(String),
+      time: expect.any(Number),
       name: 'ctx',
       svc: 'logging.test',
       msg: 'test',
@@ -269,7 +269,7 @@ test('Test lowercase level', () => {
   expect(stream.json()).toEqual(
     expect.objectContaining({
       level: 'info',
-      time: expect.any(String),
+      time: expect.any(Number),
       name: 'ctx',
       svc: 'logging.test',
       msg: 'test',
