@@ -332,6 +332,8 @@ function getDefaultLogLevel(): string | undefined {
 
 export type LogLevelFormat = 'numeric' | 'lowercase' | 'uppercase';
 
+export type TimestampFormat = 'epoch' | 'iso' | 'unix';
+
 /**
  * Options for logging initialization.
  */
@@ -389,6 +391,16 @@ export interface LoggingConfig {
    * The format to output the log level with. Default is "numeric".
    */
   logLevelFormat?: LogLevelFormat;
+
+  /**
+   * The format to output the timestamp with. Default is "iso".
+   */
+  timestampFormat?: TimestampFormat;
+
+  /**
+   * The timestamp label to use. Default is "time".
+   */
+  timestampLabel?: string;
 }
 
 let root: Logger | undefined;
@@ -418,6 +430,15 @@ export function initialize(options: LoggingConfig): Logger {
         };
       },
       transport: options?.transport,
+      timestamp() {
+        if (options.timestampFormat === 'unix') {
+          return `,"${options.timestampLabel ?? 'time'}":${Math.round(Date.now() / 1000.0)}`;
+        } else if (options.timestampFormat === 'epoch') {
+          return `,"${options.timestampLabel ?? 'time'}":${Date.now()}`;
+        } else {
+          return `,"${options.timestampLabel ?? 'time'}":"${new Date(Date.now()).toISOString()}"`;
+        }
+      },
       formatters: {
         ...(options.logLevelFormat === 'uppercase'
           ? {

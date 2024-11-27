@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## v1.5.0
 
+### Added
+
+-   Added support to override timestamp format
+-   Added support to override timestamp label
+-   Added support to override log level format
+
 ### Changed
 
 -   Changed Level to be named LogLevel to avoid confusion when imported

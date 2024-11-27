@@ -70,7 +70,7 @@ test('Test logging', async () => {
   expect(stream.json()).toEqual(
     expect.objectContaining({
       level: 10,
-      time: expect.any(Number),
+      time: expect.any(String),
       name: 'root',
       svc: 'logging-js',
       ip: expect.any(String),
@@ -85,7 +85,7 @@ test('Test logging', async () => {
   expect(stream.json()).toEqual(
     expect.objectContaining({
       level: 10,
-      time: expect.any(Number),
+      time: expect.any(String),
       name: 'root',
       svc: 'logging-js',
       ip: expect.any(String),
@@ -190,7 +190,7 @@ test('Test local context', () => {
   expect(stream.json()).toEqual(
     expect.objectContaining({
       level: 30,
-      time: expect.any(Number),
+      time: expect.any(String),
       name: 'local',
       svc: 'logging.test',
       msg: 'test',
@@ -209,7 +209,7 @@ test('Test local context', () => {
   expect(stream.json()).toEqual(
     expect.objectContaining({
       level: 50,
-      time: expect.any(Number),
+      time: expect.any(String),
       name: 'local',
       svc: 'logging.test',
       msg: 'test',
@@ -229,7 +229,7 @@ test("Test null or defined values don't break", () => {
   expect(stream.json()).toEqual(
     expect.objectContaining({
       level: 30,
-      time: expect.any(Number),
+      time: expect.any(String),
       name: 'ctx',
       svc: 'logging.test',
       msg: 'test',
@@ -249,7 +249,7 @@ test('Test uppercase level', () => {
   expect(stream.json()).toEqual(
     expect.objectContaining({
       level: 'INFO',
-      time: expect.any(Number),
+      time: expect.any(String),
       name: 'ctx',
       svc: 'logging.test',
       msg: 'test',
@@ -269,7 +269,27 @@ test('Test lowercase level', () => {
   expect(stream.json()).toEqual(
     expect.objectContaining({
       level: 'info',
-      time: expect.any(Number),
+      time: expect.any(String),
+      name: 'ctx',
+      svc: 'logging.test',
+      msg: 'test',
+    }),
+  );
+});
+
+test('Test ISO time', () => {
+  const log = logging.initialize({
+    level: 'info',
+    svc: 'logging.test',
+    name: 'ctx',
+    override: true,
+    timestampFormat: 'iso',
+  });
+  log.info().str('foo', undefined).msg('test');
+  expect(stream.json()).toEqual(
+    expect.objectContaining({
+      level: 30,
+      time: expect.stringContaining('Z'),
       name: 'ctx',
       svc: 'logging.test',
       msg: 'test',
