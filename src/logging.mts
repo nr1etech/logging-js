@@ -403,7 +403,7 @@ export interface LoggingConfig {
   timestampLabel?: string;
 }
 
-let root: Logger | undefined;
+export let root: Logger | undefined;
 
 /**
  * Initializes the logger. This function should be called once at the beginning of the application.
