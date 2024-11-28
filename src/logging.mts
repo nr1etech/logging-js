@@ -7,6 +7,8 @@ import {
   TransportMultiOptions,
 } from 'pino';
 
+import {threadId} from 'worker_threads';
+console.log('Thread ID:', threadId);
 console.log('NR1E logging imported');
 
 /**
