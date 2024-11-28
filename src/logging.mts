@@ -7,10 +7,6 @@ import {
   TransportMultiOptions,
 } from 'pino';
 
-import {threadId} from 'worker_threads';
-console.log('Thread ID:', threadId);
-console.log('NR1E logging imported');
-
 /**
  * The log levels supported by this library.
  */
@@ -136,7 +132,6 @@ export class Logger {
   }
 
   protected err(err: unknown): Entry {
-    console.log(err);
     if (err instanceof Error) {
       this.entryCtx['err'] = {
         type: err.name,
@@ -415,7 +410,6 @@ let root: Logger | undefined = undefined;
  * @param options the logging configuration
  */
 export function initialize(options: LoggingConfig): Logger {
-  console.log('NR1E logging initialize called');
   if (root === undefined || options.override) {
     const mixins: Record<string, string | number> = {};
     if (options.ip) {
