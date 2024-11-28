@@ -9,11 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
--   Added support to override timestamp format
--   Added support to override timestamp label
--   Added support to override log level format
--   Added optional requestId to log message
+- Added support to override timestamp format
+- Added support to override timestamp label
+- Added support to override log level format
+- Added optional requestId to log message
 
 ### Changed
 
--   Changed Level to be named LogLevel to avoid confusion when imported
+- Changed Level to be named LogLevel to avoid confusion when imported
+- Dependencies updated including the version of pino
