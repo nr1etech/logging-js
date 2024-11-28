@@ -7,6 +7,8 @@ import {
   TransportMultiOptions,
 } from 'pino';
 
+console.log('NR1E logging imported');
+
 /**
  * The log levels supported by this library.
  */
@@ -411,6 +413,7 @@ let root: Logger | undefined = undefined;
  * @param options the logging configuration
  */
 export function initialize(options: LoggingConfig): Logger {
+  console.log('NR1E logging initialize called');
   if (root === undefined || options.override) {
     const mixins: Record<string, string | number> = {};
     if (options.ip) {
