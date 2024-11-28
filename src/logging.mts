@@ -76,6 +76,7 @@ export interface Entry {
   host: (host: string) => Entry;
   ip: (ip: string) => Entry;
   cip: (ip: string) => Entry;
+  requestId: (requestId: string) => Entry;
   trace: (dt: DistributedTraceContext) => Entry;
   msg: (msg: string, ...args: string[]) => void;
   send: () => void;
@@ -174,6 +175,11 @@ export class Logger {
     return this.entry;
   }
 
+  protected requestId(requestId: string): Entry {
+    this.entryCtx['requestId'] = requestId;
+    return this.entry;
+  }
+
   protected msg(msg: string, ...args: string[]): void {
     const level =
       this.entryLevel?.bind(this.log) ?? this.log.trace.bind(this.log);
@@ -208,6 +214,7 @@ export class Logger {
       host: this.host.bind(this),
       ip: this.ip.bind(this),
       cip: this.cip.bind(this),
+      requestId: this.requestId.bind(this),
       trace: this.dtrace.bind(this),
     };
   }
