@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Added support to override timestamp format
 -   Added support to override timestamp label
 -   Added support to override log level format
+-   Added optional requestId to log message
 
 ### Changed
 
