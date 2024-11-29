@@ -71,7 +71,7 @@ test('Test logging', async () => {
     expect.objectContaining({
       level: 10,
       time: expect.any(Number),
-      name: 'root',
+      name: 'child',
       svc: 'logging-js',
       ip: expect.any(String),
       pid: expect.any(Number),
@@ -86,7 +86,7 @@ test('Test logging', async () => {
     expect.objectContaining({
       level: 10,
       time: expect.any(Number),
-      name: 'root',
+      name: 'child',
       svc: 'logging-js',
       ip: expect.any(String),
       pid: expect.any(Number),

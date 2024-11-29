@@ -96,7 +96,7 @@ export type Context = Record<string, unknown>;
  */
 export class Logger {
   public readonly svc: string;
-  public readonly name: string;
+  public readonly name: string | undefined;
   protected log: PLogger;
   protected entryCtx: Context;
   protected entry: Entry;
@@ -195,7 +195,7 @@ export class Logger {
     this.entryLevel = undefined;
   }
 
-  constructor(svc: string, name: string, log: PLogger) {
+  constructor(log: PLogger, svc: string, name?: string) {
     this.svc = svc;
     this.name = name;
     this.log = log;
@@ -423,7 +423,7 @@ export function initialize(options: LoggingConfig): Logger {
       mixins.ip = options.ip;
     }
     const svc = options.svc;
-    const name = options.name ?? 'root';
+    const name = options.name;
     const plog = pino.pino({
       level: options?.level ?? getDefaultLogLevel() ?? 'info',
       browser: {asObject: true},
@@ -480,7 +480,7 @@ export function initialize(options: LoggingConfig): Logger {
     if (options.ctx) {
       plog.setBindings(options.ctx);
     }
-    root = new Logger(svc, name, plog);
+    root = new Logger(plog, svc, name);
   }
   return root;
 }
@@ -527,7 +527,7 @@ function getProxiedRootLogger(): Logger {
   ) as Logger;
 }
 
-function createProxiedLogger(name: string, log?: Logger): Logger {
+function createProxiedLogger(name?: string, log?: Logger): Logger {
   return new Proxy(
     {},
     {
@@ -539,8 +539,8 @@ function createProxiedLogger(name: string, log?: Logger): Logger {
           return (...args: never[]) => {
             if (!root) throw new Error('Logger has not been initialized');
             const realLogger = log
-              ? new Logger(log.svc, name, log.pino().child({name}))
-              : new Logger(root.svc, name, root.pino().child({name}));
+              ? new Logger(log.pino().child({name}), log.svc, name)
+              : new Logger(root.pino().child({name}), root.svc, name);
             const method = realLogger[prop as keyof typeof realLogger];
             if (typeof method === 'function') {
               // @ts-expect-error - TS doesn't like the bind call
@@ -570,10 +570,10 @@ export function getRootLogger(): Logger {
  * @param log the logger to use. If not provided, the root logger is used.
  */
 export function getLogger(name?: string, log?: Logger): Logger {
-  name = log ? (name ?? `${log.name}.child`) : (name ?? `${root?.name}.child`);
   if (root) {
-    log = log ?? root;
-    return new Logger(log.svc, name, log.pino().child({name}));
+    return log
+      ? new Logger(log.pino().child({name}), log.svc, name)
+      : new Logger(root.pino().child({name}), root.svc, name);
   }
   return createProxiedLogger(name, log);
 }
