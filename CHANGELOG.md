@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## v1.6.0
 
+### Added
+
+- Added support to add context when getting child loggers
+
 ### Changed
 
 - Made name optional

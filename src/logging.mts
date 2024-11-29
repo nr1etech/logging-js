@@ -195,11 +195,11 @@ export class Logger {
     this.entryLevel = undefined;
   }
 
-  constructor(log: PLogger, svc: string, name?: string) {
+  constructor(log: PLogger, svc: string, name?: string, ctx?: Context) {
     this.svc = svc;
     this.name = name;
     this.log = log;
-    this.entryCtx = {};
+    this.entryCtx = ctx ?? {};
     this.entry = {
       msg: this.msg.bind(this),
       send: this.send.bind(this),
@@ -527,7 +527,11 @@ function getProxiedRootLogger(): Logger {
   ) as Logger;
 }
 
-function createProxiedLogger(name?: string, log?: Logger): Logger {
+function createProxiedLogger(
+  name?: string,
+  log?: Logger,
+  ctx?: Context,
+): Logger {
   return new Proxy(
     {},
     {
@@ -539,8 +543,8 @@ function createProxiedLogger(name?: string, log?: Logger): Logger {
           return (...args: never[]) => {
             if (!root) throw new Error('Logger has not been initialized');
             const realLogger = log
-              ? new Logger(log.pino().child({name}), log.svc, name)
-              : new Logger(root.pino().child({name}), root.svc, name);
+              ? new Logger(log.pino().child({name}), log.svc, name, ctx)
+              : new Logger(root.pino().child({name}), root.svc, name, ctx);
             const method = realLogger[prop as keyof typeof realLogger];
             if (typeof method === 'function') {
               // @ts-expect-error - TS doesn't like the bind call
@@ -568,12 +572,13 @@ export function getRootLogger(): Logger {
  *
  * @param name the name of the child logger
  * @param log the logger to use. If not provided, the root logger is used.
+ * @param ctx the context to add to the logger
  */
-export function getLogger(name?: string, log?: Logger): Logger {
+export function getLogger(name?: string, log?: Logger, ctx?: Context): Logger {
   if (root) {
     return log
-      ? new Logger(log.pino().child({name}), log.svc, name)
-      : new Logger(root.pino().child({name}), root.svc, name);
+      ? new Logger(log.pino().child({name}), log.svc, name, ctx)
+      : new Logger(root.pino().child({name}), root.svc, name, ctx);
   }
-  return createProxiedLogger(name, log);
+  return createProxiedLogger(name, log, ctx);
 }
