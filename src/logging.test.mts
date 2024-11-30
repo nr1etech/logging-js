@@ -1,7 +1,7 @@
 import {expect, test} from 'vitest';
 import * as logging from './index.mjs';
 import {Writable} from 'stream';
-import {getIpAddress} from './index.mjs';
+import {getIpAddress, getLogger} from './index.mjs';
 
 class TestStream extends Writable {
   last: string | undefined;
@@ -21,6 +21,10 @@ class TestStream extends Writable {
     const obj = JSON.parse(this.last);
     this.last = undefined;
     return obj;
+  }
+
+  text(): string | undefined {
+    return this.last;
   }
 }
 
@@ -113,6 +117,11 @@ test('Test logging', async () => {
 });
 
 test('Test logging levels', () => {
+  logging.initialize({
+    level: 'trace',
+    svc: 'logging-js',
+    override: true,
+  });
   expect(logging.isLevel('trace')).toBe(true);
   expect(logging.isLevel('debug')).toBe(true);
   expect(logging.isLevel('info')).toBe(true);
@@ -121,6 +130,7 @@ test('Test logging levels', () => {
   expect(logging.isLevel('fatal')).toBe(true);
   expect(logging.isLevel('foo')).toBe(false);
   const rootLogger = logging.getRootLogger();
+  console.log(rootLogger);
   rootLogger.level('trace');
   expect(rootLogger.isTrace()).toBe(true);
   expect(rootLogger.getLevel()).toBe('trace');
@@ -157,7 +167,6 @@ test('Test lazy initialization', () => {
   logging.initialize({
     level: 'trace',
     svc: 'logging.test',
-    name: 'Test lazy initialization',
     override: true,
   });
   rootLogger.trace().msg('test');
@@ -167,32 +176,29 @@ test('Test lazy initialization', () => {
 test('Test ctx methods', () => {
   const rootLogger = logging.initialize({
     level: 'info',
-    svc: 'logging.test',
-    name: 'ctx',
+    svc: 'test',
     ctx: {foo: 'bar'},
     override: true,
   });
   rootLogger.ctx({bar: 'baz'});
   expect(rootLogger.getCtx().bar).toEqual('baz');
-  const logger = logging.getLogger();
+  const logger = logging.getLogger('child');
   expect(logger.getCtx().bar).toEqual('baz');
 });
 
 test('Test local context', () => {
   const log = logging.initialize({
-    svc: 'logging.test',
-    name: 'local',
+    svc: 'test',
     level: 'info',
     override: true,
   });
 
-  log.info().thread('test').msg('test');
+  log.thread('test').info().msg('test');
   expect(stream.json()).toEqual(
     expect.objectContaining({
       level: 30,
       time: expect.any(Number),
-      name: 'local',
-      svc: 'logging.test',
+      svc: 'test',
       msg: 'test',
       thread: 'test',
     }),
@@ -210,8 +216,7 @@ test('Test local context', () => {
     expect.objectContaining({
       level: 50,
       time: expect.any(Number),
-      name: 'local',
-      svc: 'logging.test',
+      svc: 'test',
       msg: 'test',
       err: {type: 'Object', message: 'error occurred', stack: 'some stack'}, // TODO Object should be "Error"
     }),
@@ -221,27 +226,17 @@ test('Test local context', () => {
 test("Test null or defined values don't break", () => {
   const log = logging.initialize({
     level: 'info',
-    svc: 'logging.test',
-    name: 'ctx',
+    svc: 'test',
     override: true,
   });
   log.info().str('foo', undefined).msg('test');
-  expect(stream.json()).toEqual(
-    expect.objectContaining({
-      level: 30,
-      time: expect.any(Number),
-      name: 'ctx',
-      svc: 'logging.test',
-      msg: 'test',
-    }),
-  );
+  expect((stream.json() as {foo?: string}).foo).toBeUndefined();
 });
 
 test('Test uppercase level', () => {
   const log = logging.initialize({
     level: 'info',
-    svc: 'logging.test',
-    name: 'ctx',
+    svc: 'test',
     override: true,
     logLevelFormat: 'uppercase',
   });
@@ -250,8 +245,7 @@ test('Test uppercase level', () => {
     expect.objectContaining({
       level: 'INFO',
       time: expect.any(Number),
-      name: 'ctx',
-      svc: 'logging.test',
+      svc: 'test',
       msg: 'test',
     }),
   );
@@ -260,8 +254,7 @@ test('Test uppercase level', () => {
 test('Test lowercase level', () => {
   const log = logging.initialize({
     level: 'info',
-    svc: 'logging.test',
-    name: 'ctx',
+    svc: 'test',
     override: true,
     logLevelFormat: 'lowercase',
   });
@@ -270,8 +263,7 @@ test('Test lowercase level', () => {
     expect.objectContaining({
       level: 'info',
       time: expect.any(Number),
-      name: 'ctx',
-      svc: 'logging.test',
+      svc: 'test',
       msg: 'test',
     }),
   );
@@ -280,8 +272,7 @@ test('Test lowercase level', () => {
 test('Test ISO time', () => {
   const log = logging.initialize({
     level: 'info',
-    svc: 'logging.test',
-    name: 'ctx',
+    svc: 'test',
     override: true,
     timestampFormat: 'iso',
   });
@@ -290,9 +281,37 @@ test('Test ISO time', () => {
     expect.objectContaining({
       level: 30,
       time: expect.stringContaining('Z'),
-      name: 'ctx',
-      svc: 'logging.test',
+      svc: 'test',
       msg: 'test',
+    }),
+  );
+});
+
+test('Test child context', () => {
+  const log = logging.initialize({
+    level: 'trace',
+    svc: 'test',
+    override: true,
+  });
+  log.ctx({foo: 'bar'});
+  const child = getLogger('child');
+  child.trace().msg('test');
+  expect(stream.json()).toEqual(
+    expect.objectContaining({name: 'child', foo: 'bar'}),
+  );
+  const child2 = child.child('child2').ctx({moo: 'oink'});
+  child2.trace().msg('test');
+  expect(stream.json()).toEqual(
+    expect.objectContaining({name: 'child2', foo: 'bar', moo: 'oink'}),
+  );
+  const child3 = child2.child('child3').ctx({meow: 'bark'});
+  child3.trace().msg('test');
+  expect(stream.json()).toEqual(
+    expect.objectContaining({
+      name: 'child3',
+      foo: 'bar',
+      moo: 'oink',
+      meow: 'bark',
     }),
   );
 });

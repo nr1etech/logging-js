@@ -9,15 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Added support to add context when getting child loggers
+- Logging standard for reference 
 
 ### Changed
 
-- Made name optional
+- Changed requestId to rid to match standard and reduce volume
+- Moved context methods from log entry to logger to avoid confusion
+- Removed name from the context to avoid duplication with how pino works
 
 ### Fixed
 
-- Fixed bug preventing child loggers from being created
+- Fixed bug preventing child loggers from being created properly
 
 ## v1.5.0
 

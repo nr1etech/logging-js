@@ -71,13 +71,6 @@ export interface Entry {
   ) => Entry;
   unknown: (key: string, value: unknown) => Entry;
   err: (err: unknown) => Entry;
-  thread: (thread: string) => Entry;
-  pid: (pid: number) => Entry;
-  host: (host: string) => Entry;
-  ip: (ip: string) => Entry;
-  cip: (ip: string) => Entry;
-  requestId: (requestId: string) => Entry;
-  trace: (dt: DistributedTraceContext) => Entry;
   msg: (msg: string, ...args: string[]) => void;
   send: () => void;
 }
@@ -103,6 +96,23 @@ export class Logger {
   protected entryLevel:
     | ((ctx: Context, msg?: string, ...args: string[]) => void)
     | undefined;
+
+  constructor(log: PLogger, svc: string, name?: string) {
+    this.svc = svc;
+    this.name = name;
+    this.log = log;
+    this.entryCtx = {};
+    this.entry = {
+      msg: this.msg.bind(this),
+      send: this.send.bind(this),
+      str: this.str.bind(this),
+      num: this.num.bind(this),
+      bool: this.bool.bind(this),
+      obj: this.obj.bind(this),
+      unknown: this.unknown.bind(this),
+      err: this.err.bind(this),
+    };
+  }
 
   protected str(key: string, value: string | undefined | null): Entry {
     this.entryCtx[key] = value;
@@ -145,41 +155,6 @@ export class Logger {
     return this.entry;
   }
 
-  protected thread(thread: string): Entry {
-    this.entryCtx['thread'] = thread;
-    return this.entry;
-  }
-
-  protected pid(pid: number): Entry {
-    this.entryCtx['pid'] = pid;
-    return this.entry;
-  }
-
-  protected host(host: string): Entry {
-    this.entryCtx['host'] = host;
-    return this.entry;
-  }
-
-  protected ip(ip: string): Entry {
-    this.entryCtx['ip'] = ip;
-    return this.entry;
-  }
-
-  protected cip(ip: string): Entry {
-    this.entryCtx['cip'] = ip;
-    return this.entry;
-  }
-
-  protected dtrace(dt: DistributedTraceContext): Entry {
-    this.entryCtx['dt'] = dt;
-    return this.entry;
-  }
-
-  protected requestId(requestId: string): Entry {
-    this.entryCtx['requestId'] = requestId;
-    return this.entry;
-  }
-
   protected msg(msg: string, ...args: string[]): void {
     const level =
       this.entryLevel?.bind(this.log) ?? this.log.trace.bind(this.log);
@@ -195,28 +170,43 @@ export class Logger {
     this.entryLevel = undefined;
   }
 
-  constructor(log: PLogger, svc: string, name?: string, ctx?: Context) {
-    this.svc = svc;
-    this.name = name;
-    this.log = log;
-    this.entryCtx = ctx ?? {};
-    this.entry = {
-      msg: this.msg.bind(this),
-      send: this.send.bind(this),
-      str: this.str.bind(this),
-      num: this.num.bind(this),
-      bool: this.bool.bind(this),
-      obj: this.obj.bind(this),
-      unknown: this.unknown.bind(this),
-      err: this.err.bind(this),
-      thread: this.thread.bind(this),
-      pid: this.pid.bind(this),
-      host: this.host.bind(this),
-      ip: this.ip.bind(this),
-      cip: this.cip.bind(this),
-      requestId: this.requestId.bind(this),
-      trace: this.dtrace.bind(this),
-    };
+  thread(thread: string): Logger {
+    this.entryCtx['thread'] = thread;
+    return this;
+  }
+
+  pid(pid: number): Logger {
+    this.entryCtx['pid'] = pid;
+    return this;
+  }
+
+  host(host: string): Logger {
+    this.entryCtx['host'] = host;
+    return this;
+  }
+
+  ip(ip: string): Logger {
+    this.entryCtx['ip'] = ip;
+    return this;
+  }
+
+  cip(ip: string): Logger {
+    this.entryCtx['cip'] = ip;
+    return this;
+  }
+
+  dtrace(dt: DistributedTraceContext): Logger {
+    this.entryCtx['dt'] = dt;
+    return this;
+  }
+
+  rid(rid: string): Logger {
+    this.entryCtx['rid'] = rid;
+    return this;
+  }
+
+  child(name: string): Logger {
+    return new Logger(this.log.child({}), this.svc, name);
   }
 
   isTrace(): boolean {
@@ -225,6 +215,7 @@ export class Logger {
 
   trace(): Entry {
     this.entryLevel = this.log.trace;
+    this.entry.str('name', this.name);
     return this.entry;
   }
 
@@ -234,6 +225,7 @@ export class Logger {
 
   debug(): Entry {
     this.entryLevel = this.log.debug;
+    this.entry.str('name', this.name);
     return this.entry;
   }
 
@@ -243,6 +235,7 @@ export class Logger {
 
   info(): Entry {
     this.entryLevel = this.log.info;
+    this.entry.str('name', this.name);
     return this.entry;
   }
 
@@ -252,6 +245,7 @@ export class Logger {
 
   warn(): Entry {
     this.entryLevel = this.log.warn;
+    this.entry.str('name', this.name);
     return this.entry;
   }
 
@@ -261,6 +255,7 @@ export class Logger {
 
   error(): Entry {
     this.entryLevel = this.log.error;
+    this.entry.str('name', this.name);
     return this.entry;
   }
 
@@ -270,6 +265,7 @@ export class Logger {
 
   fatal(): Entry {
     this.entryLevel = this.log.fatal;
+    this.entry.str('name', this.name);
     return this.entry;
   }
 
@@ -279,6 +275,7 @@ export class Logger {
 
   silent(): Entry {
     this.entryLevel = this.log.silent;
+    this.entry.str('name', this.name);
     return this.entry;
   }
 
@@ -350,7 +347,7 @@ export interface LoggingConfig {
   svc: string;
 
   /**
-   * The name of the root logger. Default is 'root' if not specified.
+   * The name of the logger. If not provided 'root' is used.
    */
   name?: string;
 
@@ -394,17 +391,17 @@ export interface LoggingConfig {
   includeHost?: boolean;
 
   /**
-   * The format to output the log level with. Default is "numeric".
+   * The format to output the log level with. Default is "numeric" following the standard.
    */
   logLevelFormat?: LogLevelFormat;
 
   /**
-   * The format to output the timestamp with. Default is "epoch".
+   * The format to output the timestamp with. Default is "epoch" following the standard.
    */
   timestampFormat?: TimestampFormat;
 
   /**
-   * The timestamp label to use. Default is "time".
+   * The timestamp label to use. Default is "time" following the standard.
    */
   timestampLabel?: string;
 }
@@ -423,7 +420,6 @@ export function initialize(options: LoggingConfig): Logger {
       mixins.ip = options.ip;
     }
     const svc = options.svc;
-    const name = options.name;
     const plog = pino.pino({
       level: options?.level ?? getDefaultLogLevel() ?? 'info',
       browser: {asObject: true},
@@ -431,7 +427,6 @@ export function initialize(options: LoggingConfig): Logger {
       mixin: () => {
         return {
           svc,
-          name,
           ...mixins,
         };
       },
@@ -480,7 +475,7 @@ export function initialize(options: LoggingConfig): Logger {
     if (options.ctx) {
       plog.setBindings(options.ctx);
     }
-    root = new Logger(plog, svc, name);
+    root = new Logger(plog, svc, options.name ?? 'root');
   }
   return root;
 }
@@ -509,7 +504,23 @@ function getProxiedRootLogger(): Logger {
       get: function (target, prop) {
         if (
           typeof prop === 'string' &&
-          ['trace', 'debug', 'info', 'warn', 'error', 'fatal'].includes(prop)
+          [
+            'trace',
+            'debug',
+            'info',
+            'warn',
+            'error',
+            'fatal',
+            'level',
+            'thread',
+            'pid',
+            'host',
+            'ip',
+            'cip',
+            'dtrace',
+            'rid',
+            'child',
+          ].includes(prop)
         ) {
           return (...args: never[]) => {
             if (!root) throw new Error('Logger has not been initialized');
@@ -527,24 +538,36 @@ function getProxiedRootLogger(): Logger {
   ) as Logger;
 }
 
-function createProxiedLogger(
-  name?: string,
-  log?: Logger,
-  ctx?: Context,
-): Logger {
+function createProxiedLogger(name?: string, log?: Logger): Logger {
   return new Proxy(
     {},
     {
       get: function (target, prop) {
         if (
           typeof prop === 'string' &&
-          ['trace', 'debug', 'info', 'warn', 'error', 'fatal'].includes(prop)
+          [
+            'trace',
+            'debug',
+            'info',
+            'warn',
+            'error',
+            'fatal',
+            'level',
+            'thread',
+            'pid',
+            'host',
+            'ip',
+            'cip',
+            'dtrace',
+            'rid',
+            'child',
+          ].includes(prop)
         ) {
           return (...args: never[]) => {
             if (!root) throw new Error('Logger has not been initialized');
             const realLogger = log
-              ? new Logger(log.pino().child({name}), log.svc, name, ctx)
-              : new Logger(root.pino().child({name}), root.svc, name, ctx);
+              ? new Logger(log.pino().child({name}), log.svc, name)
+              : new Logger(root.pino().child({name}), root.svc, name);
             const method = realLogger[prop as keyof typeof realLogger];
             if (typeof method === 'function') {
               // @ts-expect-error - TS doesn't like the bind call
@@ -568,17 +591,13 @@ export function getRootLogger(): Logger {
 }
 
 /**
- * Returns a child logger.
+ * Returns a child logger from the root logger.
  *
  * @param name the name of the child logger
- * @param log the logger to use. If not provided, the root logger is used.
- * @param ctx the context to add to the logger
  */
-export function getLogger(name?: string, log?: Logger, ctx?: Context): Logger {
+export function getLogger(name: string): Logger {
   if (root) {
-    return log
-      ? new Logger(log.pino().child({name}), log.svc, name, ctx)
-      : new Logger(root.pino().child({name}), root.svc, name, ctx);
+    return new Logger(root.pino().child({}), root.svc, name);
   }
-  return createProxiedLogger(name, log, ctx);
+  return createProxiedLogger(name);
 }
