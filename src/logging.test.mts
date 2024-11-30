@@ -315,3 +315,21 @@ test('Test child context', () => {
     }),
   );
 });
+
+test('Test duplicate child', () => {
+  const log = logging.initialize({
+    level: 'trace',
+    svc: 'test',
+    override: true,
+  });
+  const child1 = log.child('child').ctx({foo: 'moo', moo: 'foo'});
+  child1.trace().msg('test');
+  expect(stream.json()).toEqual(
+    expect.objectContaining({name: 'child', foo: 'moo', moo: 'foo'}),
+  );
+  const child2 = log.child('child').ctx({foo: 'oink', oink: 'foo'});
+  child2.trace().msg('test');
+  expect(stream.json()).toEqual(
+    expect.objectContaining({name: 'child', foo: 'oink', oink: 'foo'}),
+  );
+});
