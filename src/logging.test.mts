@@ -333,3 +333,23 @@ test('Test duplicate child', () => {
     expect.objectContaining({name: 'child', foo: 'oink', oink: 'foo'}),
   );
 });
+
+test('Test context inheritance', () => {
+  const log = logging.initialize({
+    level: 'trace',
+    svc: 'test',
+    override: true,
+  });
+  log.rid('1234');
+  log.ctx({
+    foo: 'bar',
+  });
+  const child = log.child('child');
+  child.trace().msg('test');
+  expect(stream.json()).toEqual(
+    expect.objectContaining({
+      rid: '1234',
+      foo: 'bar',
+    }),
+  );
+});

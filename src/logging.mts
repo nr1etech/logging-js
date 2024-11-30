@@ -172,49 +172,49 @@ export class Logger {
 
   thread(thread: string | null | undefined): Logger {
     if (thread) {
-      this.entryCtx['thread'] = thread;
+      this.log.setBindings({thread});
     }
     return this;
   }
 
   pid(pid: number | null | undefined): Logger {
     if (pid) {
-      this.entryCtx['pid'] = pid;
+      this.log.setBindings({pid});
     }
     return this;
   }
 
   host(host: string | null | undefined): Logger {
     if (host) {
-      this.entryCtx['host'] = host;
+      this.log.setBindings({host});
     }
     return this;
   }
 
   ip(ip: string | null | undefined): Logger {
     if (ip) {
-      this.entryCtx['ip'] = ip;
+      this.log.setBindings({ip});
     }
     return this;
   }
 
-  cip(ip: string | null | undefined): Logger {
-    if (ip) {
-      this.entryCtx['cip'] = ip;
+  cip(cip: string | null | undefined): Logger {
+    if (cip) {
+      this.log.setBindings({cip});
     }
     return this;
   }
 
   dtrace(dt: DistributedTraceContext | null | undefined): Logger {
     if (dt) {
-      this.entryCtx['dt'] = dt;
+      this.log.setBindings({dt});
     }
     return this;
   }
 
   rid(rid: string | null | undefined): Logger {
     if (rid) {
-      this.entryCtx['rid'] = rid;
+      this.log.setBindings({rid});
     }
     return this;
   }
