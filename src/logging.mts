@@ -170,49 +170,49 @@ export class Logger {
     this.entryLevel = undefined;
   }
 
-  thread(thread?: string): Logger {
+  thread(thread: string | null | undefined): Logger {
     if (thread) {
       this.entryCtx['thread'] = thread;
     }
     return this;
   }
 
-  pid(pid?: number): Logger {
+  pid(pid: number | null | undefined): Logger {
     if (pid) {
       this.entryCtx['pid'] = pid;
     }
     return this;
   }
 
-  host(host?: string): Logger {
+  host(host: string | null | undefined): Logger {
     if (host) {
       this.entryCtx['host'] = host;
     }
     return this;
   }
 
-  ip(ip?: string): Logger {
+  ip(ip: string | null | undefined): Logger {
     if (ip) {
       this.entryCtx['ip'] = ip;
     }
     return this;
   }
 
-  cip(ip?: string): Logger {
+  cip(ip: string | null | undefined): Logger {
     if (ip) {
       this.entryCtx['cip'] = ip;
     }
     return this;
   }
 
-  dtrace(dt?: DistributedTraceContext): Logger {
+  dtrace(dt: DistributedTraceContext | null | undefined): Logger {
     if (dt) {
       this.entryCtx['dt'] = dt;
     }
     return this;
   }
 
-  rid(rid?: string): Logger {
+  rid(rid: string | null | undefined): Logger {
     if (rid) {
       this.entryCtx['rid'] = rid;
     }
