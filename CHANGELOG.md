@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed requestId to rid to match standard and reduce volume
 - Moved context methods from log entry to logger to avoid confusion
 - Removed name from the context to avoid duplication with how pino works
+- getLogger is now newLogger for clarity
 
 ### Fixed
 

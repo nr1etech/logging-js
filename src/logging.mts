@@ -595,7 +595,7 @@ export function getRootLogger(): Logger {
  *
  * @param name the name of the child logger
  */
-export function getLogger(name: string): Logger {
+export function newLogger(name: string): Logger {
   if (root) {
     return new Logger(root.pino().child({}), root.svc, name);
   }

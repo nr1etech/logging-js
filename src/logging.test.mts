@@ -1,7 +1,7 @@
 import {expect, test} from 'vitest';
 import * as logging from './index.mjs';
 import {Writable} from 'stream';
-import {getIpAddress, getLogger} from './index.mjs';
+import {getIpAddress, newLogger} from './index.mjs';
 
 class TestStream extends Writable {
   last: string | undefined;
@@ -69,7 +69,7 @@ test('Test logging', async () => {
   expect(logging.isInitialized()).toBeTruthy();
   const root = logging.getRootLogger();
   expect(root).toBeDefined();
-  const child = logging.getLogger('child');
+  const child = logging.newLogger('child');
   child.trace().msg('test trace');
   expect(stream.json()).toEqual(
     expect.objectContaining({
@@ -157,7 +157,7 @@ test('Test logging levels', () => {
 test('Test lazy initialization', () => {
   logging.shutdown();
   const rootLogger = logging.getRootLogger();
-  const childLogger = logging.getLogger('child');
+  const childLogger = logging.newLogger('child');
   expect(() => rootLogger.debug().msg('test')).toThrow(
     'Logger has not been initialized',
   );
@@ -182,7 +182,7 @@ test('Test ctx methods', () => {
   });
   rootLogger.ctx({bar: 'baz'});
   expect(rootLogger.getCtx().bar).toEqual('baz');
-  const logger = logging.getLogger('child');
+  const logger = logging.newLogger('child');
   expect(logger.getCtx().bar).toEqual('baz');
 });
 
@@ -294,7 +294,7 @@ test('Test child context', () => {
     override: true,
   });
   log.ctx({foo: 'bar'});
-  const child = getLogger('child');
+  const child = newLogger('child');
   child.trace().msg('test');
   expect(stream.json()).toEqual(
     expect.objectContaining({name: 'child', foo: 'bar'}),
